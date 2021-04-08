@@ -106,12 +106,9 @@ def get_custom_model(max_pos, attention_window):
     of Tensorflow models when resizing
     '''
     model = LongformerForMaskedLM.from_pretrained('allenai/longformer-base-4096', attention_window=attention_window)
-    tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096', model_max_length=max_pos)
     config = model.config
 
     # extend position embeddings
-    tokenizer.model_max_length = max_pos
-    tokenizer.init_kwargs['model_max_length'] = max_pos
     current_max_pos, embed_size = model.longformer.embeddings.position_embeddings.weight.shape
     max_pos += 2  # NOTE: RoBERTa has positions 0,1 reserved, so embedding size is max position + 2
     config.max_position_embeddings = max_pos
@@ -127,6 +124,11 @@ def get_custom_model(max_pos, attention_window):
     model.longformer.embeddings.position_embeddings.weight.data = new_pos_embed
     model.longformer.embeddings.position_ids.data = torch.tensor([i for i in range(max_pos)]).reshape(1, max_pos)
     model.save_pretrained('tmp/LF/')
+    
+    tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
+    vocab_file, merges_file = tokenizer.save_vocabulary('.')
+    tokenizer = LongformerTokenizer(vocab_file, merges_file, tokenizer.init_kwargs.update({'model_max_length' : max_pos}))
+
     return TFLongformerForMaskedLM.from_pretrained('tmp/LF', from_pt=True, attention_window=attention_window), tokenizer
 
 def find_sub_list(sl,l):
