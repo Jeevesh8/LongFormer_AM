@@ -1,0 +1,35 @@
+
+
+I entirely agree that certain parts are unnecessarily complex and complicated.
+I don't think you'll find many people who disagree that the American legal system could be slimmed down substantially.
+
+I'll make two quick points with the idea of persuading you that, while it should be simplified, a substantial degree of complexity is necessary for certain aspects to function.
+
+First, take criminal law.
+Let's assume that laws are created on the premise that they outlaw an action that is morally bad.
+That sounds fine and dandy at first, but who defines what is morally bad?
+Some things are clear cut - hitting a small child would be morally bad.
+But what if hitting them prevented some greater harm?
+Going down this train of logic will ultimately lead to a purely utilitarian theory on the legal system.
+That isn't to say that it would be better or worse than our's currently, but given the immense literature on utilitarianism I doubt any high schooler could reasonably be expected to memorize it.
+
+Second, let's look at regulation by profession, specifically bank regulation.
+If you haven't heard of Dodd-Frank, well, lucky you.
+It's a 800-odd page legislative titan.
+I would hardly believe it couldn't be slimmed down some, yet a lot of it is necessary for a functional judicial system to determine what is and is not legal.
+Take the Volcker rule and prop. trading.
+That's explicitly illegal now (well, kind of... not yet).
+There isn't a huge moral justification to regulations such as these other than 'they increase risk and excessive risk is bad'.
+But who defines what excessive risk is?
+If you have a probability of default of 50% is that bad?
+Is 15% acceptable?
+What about 5%?
+Even better, what about 4.99999% versus 5%?
+Some of these things just ultimately need someone saying "Enough!
+We'll agree on 5% or we will agree to disagree." and to codify it.
+However, that codification, even if is only one line applied to hundreds of laws, would be immense.
+
+In short, my two points were: 1. We could create a system that simply pointed to morally impermissible actions as illegal, but that would lead to large discrepancies (or would need have some other system to define what is morally impermissible, out of scope of a high schooler's memory).
+2.
+In order to eliminate discrepancies, the system needs to codify at least some specific instances, and by doing such for an immense number of actions we go beyond, well, *any* one person's memory.
+

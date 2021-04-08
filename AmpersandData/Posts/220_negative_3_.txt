@@ -1,0 +1,8 @@
+
+
+I suppose, the only issue with that is it's very subjective. 
+Some users may like it, others may not. 
+Most websites will let you scroll to the bottom and hit a button for mobile or desktop viewing. 
+At least if it defaults to mobile, that 3G issue I mentioned means the website will load very quickly if you've got a good connection and let you scroll down and hit desktop right away, and then if you're on a poor connection you're not stuck waiting for the full website to load before being able to switch back to mobile. 
+There's also some issues with flash animations and CS styles that not all mobile devices can handle, but that usually doesn't make a phone crash, it just might make a website fail to load some bits or look a little jenky.
+

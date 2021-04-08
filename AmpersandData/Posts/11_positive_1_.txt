@@ -1,0 +1,5 @@
+
+
+It looks to me like you've made so many exceptions to your main view that you aren't looking to have your view changed.
+I'd like to talk about the title of your post, but if you have to make so many exceptions to your view, then it seems you already know it's incorrect.
+
