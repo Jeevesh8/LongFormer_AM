@@ -1,7 +1,18 @@
 import bs4
 import os
+import re
 from bs4 import BeautifulSoup
 from typing import List, Optional
+
+def clean_component(text):
+    pattern0 = r'(\n\&gt; \*Hello[\S]*)'
+    pattern1 = r"(https?://)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+/)*([\w\-]+)((\?)?[\w\s]*=\s*[\w\%&]*)*(\.html|\.htm)*"
+    pattern2 = r"\&gt;(.*)\n"
+
+    text = re.sub(pattern0, '', text)                             #Replace Footnotes
+    text = re.sub(pattern1, '[URL]', text)                        #Replace [URL] 
+    text = re.sub(pattern2, '[STARTQ]'+r'\1'+' [ENDQ] ', text)    #Replace quoted text
+    return text
 
 def add_elem(elem: bs4.BeautifulSoup, claims_lis: List[str], premise_lis : List[str], to_claim: Optional[bool]=None):
     """Adds elem to claims_lis / premise_lis recursively. If the elem is non-argumentative, the function just returns
@@ -45,9 +56,8 @@ def add_elem(elem: bs4.BeautifulSoup, claims_lis: List[str], premise_lis : List[
 def get_claims_premise(parsed_xml: bs4.BeautifulSoup) -> (List[str], List[str]):
     """Returns the list of all claims, and another list of all premises in a post
     """
-    claims_lis, premise_lis = [str(parsed_xml.find('title').find('claim').contents[0]).strip()], []
-
-    for post in [parsed_xml.find('OP')]+parsed_xml.find_all('reply'):
+    claims_lis, premise_lis = [BeautifulSoup(str(parsed_xml.find('title').find('claim').contents[0]), 'lxml').get_text().strip()], []
+    for post in [parsed_xml.find('op')]+parsed_xml.find_all('reply'):
         for elem in post.contents:
             add_elem(elem, claims_lis, premise_lis)        
     
@@ -63,7 +73,7 @@ def get_elem_nos(parsed_xml: bs4.BeautifulSoup, claims: List[str], premises: Lis
     cur_elem = 0
     elem_nos['title'] = cur_elem
     cur_elem += 1
-    for post in [parsed_xml.find('OP')]+parsed_xml.find_all('reply'):
+    for post in [parsed_xml.find('op')]+parsed_xml.find_all('reply'):
         for elem in post.contents:
             elem = str(elem)
             
@@ -166,7 +176,7 @@ def update_claims_premises(elem: bs4.BeautifulSoup, claims:List[str], premises:L
         try:
             idx = premises.index(premise)
         except:
-            raise AssertionError("Claim : ", claim, " not found in existing claims: ", claims)
+            raise AssertionError("Premise : ", premise, " not found in existing claims: ", premises)
         premises[idx] = parent_id+'\t'+parent_ref+':'+parent_rel+'\t'+premises[idx]
 
 def add_distance_relation(parsed_xml: bs4.BeautifulSoup, claims: List[str], premises: List[str]):
@@ -177,14 +187,14 @@ def add_distance_relation(parsed_xml: bs4.BeautifulSoup, claims: List[str], prem
         premise: List of all the premises in a thread.
     """
     elem_nos = get_elem_nos(parsed_xml, claims, premises)
-    title_text = parsed_xml.find('title').find('claim').get_text().strip()
+    title_text = BeautifulSoup(str(parsed_xml.find('title').find('claim').contents[0]), 'lxml').get_text().strip()
     try:
         idx = claims.index(title_text)
     except:
         raise AssertionError("Title claim not found ! In thread with claims and premises: ", claims, premises)
     claims[idx] = 'title'+'\t'+'None:None'+'\t'+claims[idx]
 
-    for post in [parsed_xml.find('OP')]+parsed_xml.find_all('reply'):
+    for post in [parsed_xml.find('op')]+parsed_xml.find_all('reply'):
         for elem in post.contents:
             update_claims_premises(elem, claims, premises)
 
@@ -199,8 +209,8 @@ if __name__=='__main__':
                 
                 with open(filename, 'r') as g:
                     xml_str = g.read()
-                
-                parsed_xml = BeautifulSoup(xml_str, "xml")
+
+                parsed_xml = BeautifulSoup(clean_component(str(BeautifulSoup(xml_str, "lxml"))), "xml")
                 claims, premises = get_claims_premise(parsed_xml)
                 
                 with open(os.path.join('AmpersandData/Threads', f[:-4]+'_'+t+'.claim'), 'w') as g:
