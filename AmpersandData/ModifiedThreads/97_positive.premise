@@ -7,9 +7,15 @@
 9	6:support	Whomever gets the worst successive dice rolls loses.
 10	6:support	When that happens, barring any statistically unlikely dice rolls, it is evident who will lose.
 11	6:support	But the game keeps going and going, because it would be "unfair" to keep going despite the likely outcome.
+12a	None:None	perhaps a redesign of the board
+12b	12:support	more mechanics to tip the scales of chance perhaps with better "Chance" cards
+12c	12:support	even removal of the pieces entirely
+12d	12:support	Add penalties for each additional player over 3 so that the success and failures of each decision weigh more heavily
 13	12:support	As of right now, after the first few passes around the board, it is easier to calculate the theoretical outcome with the help of a computer then to finish the game to its completion.
 15	14:support	because it's very, very common for people to unwitting ignore or add rules and cause the game to run longer
 16	15:support	By far the most egregious violation of this nature is ignoring the Auction rule (
+16a	None:None	where if the player who lands on an unbought space chooses not to buy it for face value, it is auctioned off to highest bidder
+16c	16:cont	), which makes it take much longer for people to build up property, dragging out the early stages of the game.
 17	15:support	Another common one I grew up with was the "Free Parking" rule addition, where landing on Free Parking confers some kind of monetary reward, which introduces more money into the game and makes it harder to go bankrupt, dragging out the game.
 19	18:support	The game only becomes a drawn-out slugfest if players can't get monopolies
 20	18:support	which only happens if players don't negotiate
