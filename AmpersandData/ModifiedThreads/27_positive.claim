@@ -1,0 +1,18 @@
+title	None:None	CMV: Veganism and vegetarianism are not the best way to improve farm animal welfare
+0	title:agreement	The chances of the entire world adopting a vegan/vegetarian diet are slim to none
+2	title:agreement	The food market, like all other markets, operates on general principles of supply and demand
+3	title:agreement	Meat farmers can use techniques exhibiting a range of costs or benefits, both in terms of environmental impact and animal welfare.
+4	title:support	A vegan or vegetarian diet denies demand, and thus potential revenue, to all meat-producing farms, regardless of how humane or environmentally sound their practice are.
+6	None:None	I concede that this is probably good for animal welfare.
+7	title:agreement	Purchasing meat from farms known to produce their meat in an ethical way not only denies demand to large factory farms
+8	None:None	helps improve the market share of ethical meat-growing
+9	None:None	which seems as though it would be even better for animal welfare.
+10	title:agreement	My general view is that people should probably as a rule eat less meat from better growers
+11	title:agreement	that will make for a bigger shift in growing practices than simply people dropping out of eating meat altogether.
+16	title:undercutter	I strongly, strongly doubt they believe that in doing so, they are making great strides in improving conditions for animals.
+21	title:undercutter	I think the vast majority of vegans and vegetarians are not delusional and feel similarly about the meat industry as I do about the Salvation Army.
+22	16:agreement	I totally agree,
+23	21:partial_attack	There are.
+25	23:undercutter	if you've met people like that, they're wrong, simple as that.
+26	23:rebuttal_attack	But I strongly doubt there are people who actually think, "not eating meat is *definitely* the BEST THING I can do for animal welfare!"
+29	26:partial_attack	That plus the fact that a large portion of the vegan advocacy I've seen revolves around the horrors of factory farming which, I believe, would be far more effectively reduced by responsible carnivory than by veganism.

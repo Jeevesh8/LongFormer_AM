@@ -1,0 +1,14 @@
+title	None:None	CMV: I believe you have three choices once you discover the suffering animals endure in the meat industry...
+0	None:None	The options are as follows
+1	None:None	1. You don't agree with what is going on and stop supporting it.
+2	None:None	2. You don't care about animals, so you're content with paying for them to be abused for your pleasure.
+3	None:None	3. You don't agree with what is going on, but try to put it to the back of your mind and continue to support it.
+5	None:None	I suspect this way of looking at it is still somewhat simplistic however
+7	6:rebuttal_attack	Ahh I've seen that article before and it's incredibly flawed.
+8	6:rebuttal_attack	It boggles my mind it was even published in all honesty.
+11	6:rebuttal_attack	not eating meat would be a great first step to reducing it
+13	9:undercutter	Not all crops are created equal.
+15	9:undercutter	No mice are slowly poisoned to death growing grass, they are for the crops that humans eat.
+16	7:undercutter	Why, it's almost like you only read the top two paragraphs.
+17	16:rebuttal_attack	I read it a month or so ago I'm actually referring to corn.
+24	17:undercutter	The fact that the US uses a poor method of production is not an indictment of the meat industry as a whole.

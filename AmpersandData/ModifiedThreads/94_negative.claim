@@ -1,0 +1,13 @@
+title	None:None	CMV:Patriotism is the belief that being born on one side of a line makes you better.
+0	title:agreement	American patriots have a general mentality against immigration.
+6	title:agreement	I understand why politics use this slogan
+12	6:agreement	I am not blaming the politicians or corporations running ads running these slogans
+14	12:agreement	really it is the citizens that have the belief that they are better, because of the side of a line they are born on, that are at fault
+15	14:agreement	Patriotism is really just this belief.
+15b	None:None	Therefore I would say that the antithesis of patriotism is not having a global perspective, but is in fact selfishness
+18	None:None	Whether you support immigration or not, so long as you are supporting what you believe is best for your nation, you are still acting patriotically
+19	None:None	even if you decide to support another nation you can still be acting patriotically as well so long as you support your nation too
+20	18_19:partial_agreement	This is true
+21	18_19:partial_agreement	I think, supporting the common good is also more important than supporting your country
+25	21:partial_attack	Yes
+26	21:partial_attack	the two are often one the same

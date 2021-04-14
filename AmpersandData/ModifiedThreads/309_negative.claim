@@ -1,0 +1,11 @@
+title	None:None	CMV: Nativity scenes are antisemitic.
+0	title:agreement	This has nothing to do with the celebration of Christmas excluding religious minorities
+1	title:agreement	traditional nativity scenes reinforce negative stereotypes about Jews
+5	title:agreement	Are we honestly expected to believe that no vacancies opened up at the inn for almost two weeks?
+12	title:agreement	The obvious implication is that Jesus' chintzy Jewish stepdad was such a tightwad that he was willing to let his pubescent wife and her newborn baby sleep in donkey slop if it would save him a few shekels
+17a	title:attack	Aren't Mary and Joseph, two holy people, especially perfect virgin Mary, both Jews? Wasn't Jesus a Jew??
+18	17a:partial_agreement	Yes
+19	17a:partial_attack	Joseph was just a regular Jew without the same kind of holiness as the other two.
+20	18:partial_agreement	Okay
+22	title:undercutter	I wouldn't call a story about them antisemitic even if the villains in the story are also Jewish.
+23	22:undercutter	Isn't the characterization of Jews as "Christ-killers" rooted in antisemitism?

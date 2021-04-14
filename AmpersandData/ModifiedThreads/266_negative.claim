@@ -1,0 +1,25 @@
+title	None:None	CMV Me joining the army is not a waste of time nor does it conflict with my personality
+0	None:None	I've always had a respect for the men in uniform and I've always wanted to join.
+1	None:None	Recently I've disagreed with the practices of the U.S. military
+3	None:None	The only reservation that I had was that it would be a waste of my time
+6	None:None	I love the idea of a brotherhood but I don't agree with the ideology,
+7	None:None	the military putting me through Med school will help me jump start life,
+8	None:None	I'm very inexperienced and haven't seen much of the world and this I think will help me
+9	8:undercutter	Different branches have different options and very different lifestyles and culture
+11	8:partial_attack	The best branch for that would be the Navy.
+13	9:undercutter	The Marines aren't knows for their... Genius...
+14	9:undercutter	The air force isn't right for me
+17	13:undercutter	I think you need to get a bit better informed if you're going with those particular stereotypes
+19	12:undercutter	As for getting seasick, it's not as much of an issue on such large ships.
+20	12:undercutter	there is actually a decent chance to never set foot on a ship.
+22	0:undercutter	a lot of people looking to join tend to forget that bit
+23	0:undercutter	it's really the most important part
+25	0:undercutter	movies which are either terrible representations or great representations of *very specific parts* of the military
+26	14:rebuttal_attack	Out of all the branches, it has the most in common with the civilian world in regards to its culture.
+28	17:partial_agreement	I think I still have a lot to research
+29	17:partial_attack	my main reason against the marines was that they are very homogeneous.
+32	17:partial_attack	it's a little creep tbh
+33	28:partial_agreement	The Army is a military service
+34	28:partial_agreement	the Air Force is a business
+35	28:partial_agreement	the Navy is a "denim and leather" bar
+36	28:partial_agreement	the Marines are a cult

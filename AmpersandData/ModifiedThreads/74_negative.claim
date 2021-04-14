@@ -1,0 +1,20 @@
+title	None:None	CMV: I believe you have three choices once you discover the suffering animals endure in the meat industry...
+0	None:None	The options are as follows
+1	None:None	1. You don't agree with what is going on and stop supporting it.
+2	None:None	2. You don't care about animals, so you're content with paying for them to be abused for your pleasure.
+3	None:None	3. You don't agree with what is going on, but try to put it to the back of your mind and continue to support it.
+5	None:None	I suspect this way of looking at it is still somewhat simplistic however
+7	0:undercutter	I feel the same way about animals in medical research.
+10	7:rebuttal_attack	Slaughtering animals is not a necessary evil for your sustenance
+11	7:undercutter	I don't know
+13	10:rebuttal_attack	There is not a good way to supply meat at an industrial scale that doesn't involve some measure of suffering for the animal.
+14	10:undercutter	We could trade information back and forth as to whether or not it's possible to be happy and healthy without meat
+15	10:rebuttal_attack	I'm firmly convinced that meat is a requirement for my diet.
+16	13:undercutter	Meat is the industry that creates the most suffering for animals
+19	15:rebuttal_attack	I'm convinced it's a healthier diet, which is a nice bonus for being compassionate.
+20	16:undercutter	This doesn't really matter if it is something that is necessary.
+23	18:undercutter	extra attention results in health benefits
+27	16:undercutter	we don't relate to them as much so they don't tug on our morals
+28	18:partial_agreement	Certainly, you can still be healthy with alternative diets.
+29	18:partial_attack	you have to curate your diet much more if you do not include meat.
+30	18:rebuttal_attack	I'm not convinced that an equally curated diet including meat would not be healthier.

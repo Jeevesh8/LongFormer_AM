@@ -1,0 +1,22 @@
+title	None:None	CMV: I believe you have three choices once you discover the suffering animals endure in the meat industry...
+0	None:None	The options are as follows
+1	None:None	1. You don't agree with what is going on and stop supporting it.
+2	None:None	2. You don't care about animals, so you're content with paying for them to be abused for your pleasure.
+3	None:None	3. You don't agree with what is going on, but try to put it to the back of your mind and continue to support it.
+5	None:None	I suspect this way of looking at it is still somewhat simplistic however
+6	title:undercutter	I think restricting this concept to the meat industry limits us to a "vegetarian/vegan lifestyle vs. carnivore lifestyle" debate
+7	title:undercutter	it's actually a lot deeper than that.
+15	title:undercutter	A completely ethical lifestyle is probably not possible without completely rejecting the modern world.
+16	1:undercutter	I have to accept that I will *never* be able to fully live within my own values.
+17	15:partial_agreement	I see what you're getting at.
+19	17:support	I'd still consider what you described as being the third option on my original post
+20	15:partial_attack	it's a very detailed version of it that explains it well.
+23	16:undercutter	If I was doing absolutely nothing to aid any of the values I believe in, then it wouldn't make any sense however.
+24	23:agreement	Yeah
+25	23:agreement	I think there's just a limited number of things that people are capable of caring about at one time
+26	23:agreement	issues that are of personal relevance are always going to carry more weight.
+28	3:undercutter	So somebody who takes Option 3 on a particular issue may not be making a true choice to *ignore* that issue.
+29	3:undercutter	They're just prioritizing their mental resources.
+37	3:undercutter	it's good that people have different Option 1 priorities to attack the problems from multiple sides.
+38	title:agreement	whilst my original view still stands
+39	28:partial_agreement	you've altered it in such a way that I now feel a little able to understand others better and in a less scornful light at least!

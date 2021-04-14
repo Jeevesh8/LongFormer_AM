@@ -1,0 +1,42 @@
+title	None:None	CMV: Most democracies are far too tolerant of extremism, especially the likes of neo-fascism, neo-nazism, radical Islamism and violent intolerance.
+0	title:agreement	I think some of the biggest threats to global stability comes from the political fringes.
+4	title:agreement	the far-left has for the most part been dealt with
+5	title:agreement	However the far-right continues to be a menace.
+6	title:agreement	I believe fascist neo-nazi groups, the KKK, the golden dawn or any religious extremist group like radical Islamism all fall under the far-right.
+7	title:agreement	These groups are always extreme fringes
+8	title:agreement	a handful of people make the world a much nastier place
+11	title:agreement	such leaders are given a free hand
+15	title:agreement	I see this as a major flaw in democracy.
+17	title:agreement	I think governments should do much more and try to completely stamp out any signs of fascism
+19	title:agreement	I find it completely absurd that we still put up with their ideologies
+20	title:agreement	Bringing socio-economic growth to communities that feel disenfranchised just isn't enough
+22	title:agreement	These bad apples need to be weeded out
+24	22:undercutter	Schools should educate children on the dangers of jewish zionism
+25	title:undercutter	their poison should be kept out of the minds of children
+29	24:agreement	The German majority needs to grow a spine and say enough is enough.
+30	29:agreement	this is obviously extreme
+31	22:undercutter	you see how such an extreme zero tolerance policy can be dangerous in its inflexibility and its arbitrariness
+32	30:rebuttal	The thing is though, what is considered a political fringe isn't really all that subjective.
+34	32:partial_agreement	I don't disagree
+39	34:undercutter	Well we have the benefit of history.
+41	34:rebuttal	In a stable democracy this isn't too hard to figure out.
+43	39:agreement	So did they.
+50	41:undercutter	Is a democracy really that stable if it needs to censor radical ideas to stop nastiness from happening?
+54	50:rebuttal	hasn't most of the world moved past the age of tyrannical rulers
+57	48:agreement	I do agree that today's moderates are potentially tomorrow's conservatives
+60	48:rebuttal	Conservatives don't do this, it's extremists.
+61	50:undercutter	There will always be evil people that bring misery to the world.
+64	54:rebuttal	I challenge the assertion we have moved past it considering what's happening in the middle east
+66	64:agreement	even beyond tyranny the west seems complicit in a global order that directly leads to many deaths of the worlds poor each day that they could have prevented
+70	67_68_69:partial_agreement	I don't think all these comparisons are true
+71	67_68_69:partial_agreement	they certainly aren't hard to make
+72	71:agreement	And they certainly have been made throughout history.
+72a	60:agreement	Exactly
+73	60:agreement	my point there wasn't that conservatives are terrible, but that what is considered moderate and okay changes
+74	73:agreement	It isn't some objective fact about people.
+77	73:agreement	The point is what people consider moderate and reasonable isn't set in stone
+78	title:undercutter	to adopt a zero tolerance policy cuts too deeply and may cut in the wrong direction
+80	62:agreement	Your first paragraph is intriguing
+81	62:agreement	I definitely agree with it
+82	67:agreement	The freedom fighter/terrorist comparison is also an interesting perspective.
+83	78:partial_agreement	Although I do think more needs to be done to combat extremism, I see where you're coming from on this.

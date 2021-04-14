@@ -1,0 +1,29 @@
+title	None:None	CMV: America is not a democracy
+3	title:agreement	It's not a free, democratic society by any means.
+4	3:agreement	It's clearly an oligarchy
+5	3:rebuttal	A democracy is not necessarily a functional, benevolent government, nor is a democracy necessarily free.
+7	3:rebuttal	Is political power in the US held by elected officials?
+8	3:rebuttal	Are those officials elected in free and fair democratic elections?
+9	7_8:agreement	The answer to both of those questions is unambiguously "yes."
+12	3:partial_agreement	You can argue, perhaps successfully, that the US is a fascist, un-free state
+13	3:rebuttal	it remains by definition a democratic one
+14	12_13:agreement	Fair enough haha.
+15	12_13:agreement	This is the best argument I've seen here
+16	title:agreement	Well in my brain a fair election is when anyone can run for office.
+19	16:agreement	On the municipal level I don't think superpacs are a problem, but definitely on a federal level.
+20	18:rebuttal	Anyone *can* run for office.
+22	18:rebuttal	you don't need millions of dollars
+24	19:rebuttal	I don't see a problem with that
+28	19:rebuttal	it's not an issue that makes the USA an un-democratic state
+31	19:rebuttal	neither of those are in conflict with the USA being a democracy by definition
+32	31:agreement	Okay, I think you have officially Changed My View haha...
+33	30:agreement	it seems like the problem is more caused by the populace not being responsible voters
+34	30:agreement	I see that and agree with it
+35	31:partial_agreement	Ideally I would like it if no money was involved in the poltical process
+36	35:undercutter	that is naive
+37	title:agreement	The reason I think this is important is because I'm pissed off about the way things are in America
+38	title:agreement	I always think that the best way to address a problem is to see it for what it is
+39	title:rebuttal	America's problem isn't that it isn't a democracy
+40	title:undercutter	I think that America's problem is that it has fetishized democracy to the point where anything resulting from that system is accepted, even if it's corrupt and tyrannical
+41	40:agreement	that's exactly what it's turning into
+44	40:agreement	I think you and I more or less agree that their is something fetid in the system

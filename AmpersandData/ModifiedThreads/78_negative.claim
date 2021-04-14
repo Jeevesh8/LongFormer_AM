@@ -1,0 +1,30 @@
+title	None:None	CMV: I believe you have three choices once you discover the suffering animals endure in the meat industry...
+0	None:None	The options are as follows
+1	None:None	1. You don't agree with what is going on and stop supporting it.
+2	None:None	2. You don't care about animals, so you're content with paying for them to be abused for your pleasure.
+3	None:None	3. You don't agree with what is going on, but try to put it to the back of your mind and continue to support it.
+5	None:None	I suspect this way of looking at it is still somewhat simplistic however
+6	0:undercutter	You hate animals and you want to see them killed.
+7	0:undercutter	View. Changed.
+9	8:partial_agreement	Hmm maybe if it makes it easier for you
+10	8:partial_attack	I can imagine someone that has empathy for humans but none for other animals.
+11	10:partial_agreement	Good point
+12	10:partial_attack	I regard that as speciesism.
+13	10:partial_agreement	I do have a Christian friend who is extremely charitable
+17	10:partial_agreement	I rationalise this by realising that helping people is her passion
+22	12:undercutter	I think it's fairly normal to be a speciesist.
+23	12:partial_agreement	I'm not trying to argue from a point of naturalism in regards to what ought to be done
+24	12:partial_attack	it shouldn't be that surprising when we encounter people that are that way
+25	12:partial_attack	it's hard enough for many people to empathize with *each other*
+27	12:partial_attack	It's just beyond the scope for many people
+30	20:agreement	the bible states that all animals were put on earth by God to serve man
+31	29:agreement	There were rules against eating certain kinds
+32	20:agreement	overall the idea was that humans have dominion over all
+33	17:agreement	there is no cognitive dissonance
+34	17:partial_attack	this would probably fall under your 2nd line of reasoning
+35	22:agreement	Yes, speciesism is indeed the norm
+36	22:agreement	I appreciate you taking the time to comment
+37	None:None	I asked this question so as to keep myself grounded in what other justifications my loved ones around me didn't have the same epiphany I did
+39	25:agreement	A very good reminder, thank you
+40	27:agreement	Not everyone is as obsessed with philosophy, psychology and nature as I am
+42	25:undercutter	I'd still class it as option 3 though
