@@ -1,5 +1,5 @@
 from transformers import LongformerTokenizer
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from component_generator import generate_components
 
@@ -10,7 +10,6 @@ def get_tokenizer():
     tokenizer = LongformerTokenizer(vocab_file, merges_file, tokenizer.init_kwargs.update({'model_max_length' : max_pos}))
     with open('special_tokens.txt') as f:
         sp_tokens = list(filter(None, f.read().split('\n')))
-        print(sp_tokens)
     tokenizer.add_tokens(sp_tokens)
     return tokenizer
 
@@ -36,7 +35,7 @@ def get_tokenized_thread(filename)-> Tuple[List[str], Dict[str, int], Dict[str, 
     ref_n_rel_type = dict()
 
     tokenized_thread = [tokenizer._convert_token_to_id('<s>')]
-    for component_tup in generate_components():
+    for component_tup in generate_components(filename):
         component, comp_type, comp_id, refers, rel_type = component_tup
         encoding = tokenizer.encode(component)[1:-1]
         if comp_type=='claim' or comp_type=='premise':

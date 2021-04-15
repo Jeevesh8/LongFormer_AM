@@ -31,7 +31,7 @@ def get_components(component: bs4.BeautifulSoup, parent_type: Optional[str]=None
     text:          The text of the component
     type:          other/claim/premise
     id:            The id of the component, None for Non-Argumentative
-    refers:        The id of the component the current component is related to. None, if it isn't related to any component
+    refers:        The ids of the component the current component is related to. None, if it isn't related to any component(separated with _)
     relation_type: The type of relation between current component and refers. None, iff refers is None.
     """
     
@@ -82,7 +82,7 @@ def generate_components(filename):
     text:          The text of the component
     type:          other/claim/premise
     id:            The id of the component, None for Non-Argumentative
-    refers:        The id of the component the current component is related to. None, if it isn't related to any component
+    refers:        The ids of the component the current component is related to. None, if it isn't related to any component(separated with _)
     relation_type: The type of relation between current component and refers. None, iff refers is None.
     """
     
@@ -96,7 +96,7 @@ def generate_components(filename):
     user_dict = dict()
         
     yield (BeautifulSoup(str(parsed_xml.find('title').find('claim').contents[0]), 'lxml').get_text().strip(),
-            "claim", "title", "None", "None")
+            "claim", "title", None, None)
         
     for post in [parsed_xml.find('op')]+parsed_xml.find_all('reply'):
         modified_post, user_tag = add_tags(post, user_dict)
