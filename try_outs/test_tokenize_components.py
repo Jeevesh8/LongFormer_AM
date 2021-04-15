@@ -15,7 +15,7 @@ if __name__=='__main__':
             filename = os.path.join(root, f)
             if not(os.path.isfile(filename) and f.endswith('.xml')):
                 continue
-            tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type = get_tokenized_thread(filename)
+            tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, _, _ = get_tokenized_thread(filename)
             print("Next tokenized thread: ", f)
             for comp_id in begin_positions:
                 ref, rel = ref_n_rel_type[comp_id]
