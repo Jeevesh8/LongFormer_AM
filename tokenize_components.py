@@ -30,10 +30,9 @@ def get_ref_link_lis(related_to, first_idx, last_idx) -> List[int]:
     return refs + [config['dist_to_label'][i] for i in range(first_idx, last_idx-1))]
         
 def get_tokenizer():
-    max_pos = 8192+2
     tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
     vocab_file, merges_file = tokenizer.save_vocabulary('.')
-    tokenizer = LongformerTokenizer(vocab_file, merges_file, tokenizer.init_kwargs.update({'model_max_length' : max_pos}))
+    tokenizer = LongformerTokenizer(vocab_file, merges_file, tokenizer.init_kwargs.update({'model_max_length' : config['max_tokenizer_length']}))
     with open('special_tokens.txt') as f:
         sp_tokens = list(filter(None, f.read().split('\n')))
     tokenizer.add_tokens(sp_tokens)

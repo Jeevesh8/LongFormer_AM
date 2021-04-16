@@ -1,5 +1,5 @@
-MAX_TOKEN_DIST = 
-MIN_TOKEN_DIST = 
+MAX_TOKEN_DIST = 2500
+MIN_TOKEN_DIST = 0
     
 config = {
     'max_rel_length' : 2+MAX_TOKEN_DIST-MIN_TOKEN_DIST, # 0 for no token to refer. 1 for title. Rest for various distances.
