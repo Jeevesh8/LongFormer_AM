@@ -117,12 +117,14 @@ def get_thread_with_labels(filename):
     relation_type_labels = [config['relations'].index('None')]*len(tokenized_thread)
     attention_mask = [1]*len(tokenized_thread)
     global_attention = get_global_attention(tokenized_thread, user_token_indices)
-
+    
+    prev_end = 0
     for comp_id in begin_positions:
         ref, rel = ref_n_rel_type[comp_id]
         reference_position = prev_comment_begin_position[comp_id]
         begin, end = begin_positions[comp_id], end_positions[comp_id]
-        assert 0<=reference_position<=begin<=end<len(tokenized_thread), "Begin, reference and end positions are not correct."
+
+        assert 0<=reference_position<=prev_end<=begin<=end<len(tokenized_thread), "Begin, reference and end and previous end positions are not correct."+str(reference_position)+", "+str(begin)+', '+str(end)+", "+str(prev_end)
 
         comp_type_labels[begin:end] = get_arg_comp_lis(comp_types[comp_id], end-begin)
         relation_type_labels[begin] = config['relations'].index(str(rel))
@@ -135,8 +137,9 @@ def get_thread_with_labels(filename):
                 comp_refer_labels = [1]+comp_refer_labels[1:]
             for i in range(begin, end):
                 refers_labels[i][j] = comp_refer_labels[i-begin]
-    
-    assert len(tokenized_thread)==len(comp_type_labels)==len(refers_labels)==len(relation_type_labels)==len(attention_mask)==len(global_attention), "Incorrect Dataset Loading !!"
+        prev_end = end
+
+    assert len(tokenized_thread)==len(comp_type_labels)==len(refers_labels)==len(relation_type_labels)==len(attention_mask)==len(global_attention), "Incorrect Dataset Loading !!"    
 
     return tokenized_thread, comp_type_labels, refers_labels, relation_type_labels, attention_mask, global_attention
 
