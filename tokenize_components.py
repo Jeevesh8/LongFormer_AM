@@ -135,7 +135,6 @@ def get_thread_with_labels(filename):
             comp_refer_labels = get_ref_link_lis(rel_dist, begin-reference_position, end-reference_position)
             if ref_id=='title':
                 comp_refer_labels = [1]+comp_refer_labels[1:]
-            print("assigning components the refer labels: ", comp_refer_labels)
             for i in range(begin, end):
                 refers_labels[i][j] = comp_refer_labels[i-begin]
         prev_end = end
