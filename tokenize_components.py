@@ -124,6 +124,10 @@ def get_thread_with_labels(filename):
         comp_type_labels[begin:end] = get_arg_comp_lis(comp_types[comp_id], end-begin)
         relation_type_labels[begin] = config['relations'].index(str(rel))
         relation_type_labels[begin+1:end] = [config['relations'].index('cont')]*(end-(begin+1))
+        
+        if ref is None:
+            continue
+        
         for j, ref_id in enumerate(ref.split('_')):
             rel_dist = begin_positions[ref_id]-prev_comment_begin_position[comp_id]
             comp_refer_labels = get_ref_link_lis(rel_dist, begin-prev_comment_begin_position[comp_id], end-prev_comment_begin_position[comp_id])
