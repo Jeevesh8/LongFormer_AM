@@ -137,8 +137,9 @@ def get_thread_with_labels(filename):
 
 def get_model_inputs(file_lis):
     if type(file_lis) is str:
-        files = [os.path.join(file_lis, f) for f in os.listdir(file_lis)]
-    for filename in filenames:
-        if not(os.path.isfile(filename) and f.endswith('.xml')):
+        assert os.path.isdir(file_lis), "get_model_inputs() take either a directory name or file list as input! The provided argument is incorrect."
+        file_lis = [os.path.join(file_lis, f) for f in os.listdir(file_lis)]
+    for filename in file_lis:
+        if not(os.path.isfile(filename) and filename.endswith('.xml')):
             continue
         yield get_thread_with_labels(filename)
