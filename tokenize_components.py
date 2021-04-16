@@ -124,7 +124,7 @@ def get_thread_with_labels(filename):
         reference_position = prev_comment_begin_position[comp_id]
         begin, end = begin_positions[comp_id], end_positions[comp_id]
 
-        assert 0<=reference_position<=prev_end<=begin<=end<len(tokenized_thread), "Begin, reference and end and previous end positions are not correct."+str(reference_position)+", "+str(begin)+', '+str(end)+", "+str(prev_end)
+        assert 0<=reference_position<=prev_end<=begin<=end<len(tokenized_thread) or 0<=reference_position<=prev_end+1<=begin<=end<len(tokenized_thread), "Begin, reference and end and previous end positions are not correct."+str(reference_position)+", "+str(begin)+', '+str(end)+", "+str(prev_end)
 
         comp_type_labels[begin:end] = get_arg_comp_lis(comp_types[comp_id], end-begin)
         relation_type_labels[begin] = config['relations'].index(str(rel))
@@ -135,6 +135,7 @@ def get_thread_with_labels(filename):
             comp_refer_labels = get_ref_link_lis(rel_dist, begin-reference_position, end-reference_position)
             if ref_id=='title':
                 comp_refer_labels = [1]+comp_refer_labels[1:]
+            print("assigning components the refer labels: ", comp_type_labels)
             for i in range(begin, end):
                 refers_labels[i][j] = comp_refer_labels[i-begin]
         prev_end = end
