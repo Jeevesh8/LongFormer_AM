@@ -113,7 +113,7 @@ def get_thread_with_labels(filename):
     _, user_token_indices = get_tokenizer()
 
     comp_type_labels = [config['arg_components']['other']]*len(tokenized_thread)
-    refers_labels = [[0]*config['max_rel_comps']]*len(tokenized_thread)
+    refers_labels = list(([0]*config['max_rel_comps'] for _ in range(len(tokenized_thread))))
     relation_type_labels = [config['relations'].index('None')]*len(tokenized_thread)
     attention_mask = [1]*len(tokenized_thread)
     global_attention = get_global_attention(tokenized_thread, user_token_indices)
@@ -135,7 +135,7 @@ def get_thread_with_labels(filename):
             comp_refer_labels = get_ref_link_lis(rel_dist, begin-reference_position, end-reference_position)
             if ref_id=='title':
                 comp_refer_labels = [1]+comp_refer_labels[1:]
-            print("assigning components the refer labels: ", comp_type_labels)
+            print("assigning components the refer labels: ", comp_refer_labels)
             for i in range(begin, end):
                 refers_labels[i][j] = comp_refer_labels[i-begin]
         prev_end = end
