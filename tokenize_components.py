@@ -1,9 +1,8 @@
 import os
 import tensorflow as tf
-from transformers import LongformerTokenizer
 from typing import List, Dict, Tuple
 
-from configs import config
+from configs import config, tokenizer, user_token_indices
 from component_generator import generate_components
 from my_utils import convert_outputs_to_tensors
 
@@ -30,15 +29,6 @@ def get_ref_link_lis(related_to, first_idx, last_idx) -> List[int]:
         refs = [0]
     return refs + [config['dist_to_label'][i] for i in range(first_idx, last_idx-1)]
         
-def get_tokenizer():
-    tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
-    vocab_file, merges_file = tokenizer.save_vocabulary('.')
-    tokenizer = LongformerTokenizer(vocab_file, merges_file, tokenizer.init_kwargs.update({'model_max_length' : config['max_tokenizer_length']}))
-    with open('special_tokens.txt') as f:
-        sp_tokens = list(filter(None, f.read().split('\n')))
-    tokenizer.add_tokens(sp_tokens)
-    user_token_indices = [tokenizer.encode('[USER0]')[1:-1][0], tokenizer.encode('[USER1]')[1:-1][0]]
-    return tokenizer, user_token_indices
 
 def get_global_attention(tokenized_thread, user_token_indices):
     global_attention = [0]*len(tokenized_thread)
@@ -72,8 +62,6 @@ def get_tokenized_thread(filename)-> Tuple[List[str], Dict[str, int], Dict[str, 
         end_positions: A dictionary mapping the ids of various argumentative components to their ending index+1 in tokenized_thread.
         comp_types: A dictionary mapping the ids of various argumentative components to their types ('claim'/'premise')
     """
-    tokenizer, user_token_indices = get_tokenizer()
-
     begin_positions = dict()
     end_positions = dict()
     prev_comment_begin_position = dict()
@@ -110,7 +98,6 @@ def get_thread_with_labels(filename):
         global_attention:     A 1-D integer List having 1 where there is user tokens, 0 elsewhere. [size = [len(tokenized_thread),]]
     """
     tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
-    _, user_token_indices = get_tokenizer()
 
     comp_type_labels = [config['arg_components']['other']]*len(tokenized_thread)
     refers_labels = list(([0]*config['max_rel_comps'] for _ in range(len(tokenized_thread))))
