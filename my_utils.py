@@ -6,6 +6,6 @@ def convert_outputs_to_tensors(dtype):
         @wraps(func)
         def tf_func(*args, **kwargs):
             outputs = func(*args, **kwargs)
-            return (tf.convert_to_tensor(elem, dtype=dtype) for elem in outputs)
+            return tuple((tf.convert_to_tensor(elem, dtype=dtype) for elem in outputs))
         return tf_func
     return inner
