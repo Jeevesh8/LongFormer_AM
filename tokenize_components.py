@@ -126,7 +126,7 @@ def get_thread_with_labels(filename):
         relation_type_labels[begin+1:end] = [config['relations'].index('cont')]*(end-(begin+1))
         
         for j, ref_id in enumerate(str(ref).split('_')):
-            rel_dist = begin_positions[ref_id]-prev_comment_begin_position[comp_id]
+            rel_dist = (min(config['dist_to_labels'].keys())-1 if ref_id=='None' else begin_positions[ref_id])-prev_comment_begin_position[comp_id]
             comp_refer_labels = get_ref_link_lis(rel_dist, begin-prev_comment_begin_position[comp_id], end-prev_comment_begin_position[comp_id])
             if ref_id=='title':
                 comp_refer_labels = [1]+comp_refer_labels[1:]
