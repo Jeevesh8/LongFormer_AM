@@ -120,14 +120,17 @@ def get_thread_with_labels(filename):
 
     for comp_id in begin_positions:
         ref, rel = ref_n_rel_type[comp_id]
+        reference_position = prev_comment_begin_position[comp_id]
         begin, end = begin_positions[comp_id], end_positions[comp_id]
+        assert 0<=reference_position<=begin<=end<len(tokenized_thread), "Begin, reference and end positions are not correct."
+
         comp_type_labels[begin:end] = get_arg_comp_lis(comp_types[comp_id], end-begin)
         relation_type_labels[begin] = config['relations'].index(str(rel))
         relation_type_labels[begin+1:end] = [config['relations'].index('cont')]*(end-(begin+1))
         
         for j, ref_id in enumerate(str(ref).split('_')):
-            rel_dist = (min(config['dist_to_label'].keys())-1 if ref_id=='None' else begin_positions[ref_id])-prev_comment_begin_position[comp_id]
-            comp_refer_labels = get_ref_link_lis(rel_dist, begin-prev_comment_begin_position[comp_id], end-prev_comment_begin_position[comp_id])
+            rel_dist = (min(config['dist_to_label'].keys())-1 if ref_id=='None' else begin_positions[ref_id])-reference_position
+            comp_refer_labels = get_ref_link_lis(rel_dist, begin-reference_position, end-reference_position)
             if ref_id=='title':
                 comp_refer_labels = [1]+comp_refer_labels[1:]
             for i in range(begin, end):
