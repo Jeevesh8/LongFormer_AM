@@ -27,7 +27,7 @@ def get_ref_link_lis(related_to, first_idx, last_idx) -> List[int]:
         refs = [config['dist_to_label'][related_to]]
     except:
         refs = [0]
-    return refs + [config['dist_to_label'][i] for i in range(first_idx, last_idx-1))]
+    return refs + [config['dist_to_label'][i] for i in range(first_idx, last_idx-1)]
         
 def get_tokenizer():
     tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
@@ -130,6 +130,8 @@ def get_thread_with_labels(filename):
                 comp_refer_labels = [1]+comp_refer_labels[1:]
             for i in range(begin, end):
                 refers_labels[i][j] = comp_refer_labels[i-begin]
+    
+    assert len(tokenized_thread)==len(comp_type_labels)==len(refers_labels)==len(relation_type_labels)==len(attention_mask)==len(global_attention), "Incorrect Dataset Loading !!"
 
     return tokenized_thread, comp_type_labels, refers_labels, relation_type_labels, attention_mask, global_attention
 
