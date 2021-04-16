@@ -1,6 +1,6 @@
 from my_utils import get_tokenizer
 
-MAX_TOKEN_DIST = 2500
+MAX_TOKEN_DIST = 4000
 MIN_TOKEN_DIST = 0
 
 config = {
