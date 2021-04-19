@@ -63,7 +63,7 @@ class TaskModel(tf.keras.models.Model):
             self.gru = tf.keras.layers.GRU(num_classes, return_sequences=True)
         self.crf_layer = CRF(get_transition(num_classes, max_val=max_trans, min_val=min_trans, is_padded=is_padded))
         self.relation_type_predictor = tf.keras.layers.Dense(len(config['relations']))
-        self.refers_predictor = tf.keras.layers.Dense(config['dist_to_label']+2)
+        self.refers_predictor = tf.keras.layers.Dense(len(config['dist_to_label'])+2)
         
     def call(self, inputs, features=None, training=True):
         encoded_seq = self.encoder(inputs, training=training)['last_hidden_state']
