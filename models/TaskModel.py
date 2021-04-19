@@ -92,7 +92,7 @@ class TaskModel(tf.keras.models.Model):
     
     def compute_loss(self, x, y):
         comp_type_labels, relation_type_labels, refers_labels = y
-        viterbi_sequence, potentials, sequence_length, chain_kernel, logits, relation_type_logits, refers_logits = self(x, training=training)
+        viterbi_sequence, potentials, sequence_length, chain_kernel, logits, relation_type_logits, refers_logits = self(x, training=False)
         crf_loss = -crf_log_likelihood(potentials, comp_type_labels, sequence_length, chain_kernel)[0]
         comp_type_cc_loss = self.get_cross_entropy(logits, comp_type_labels, sample_weight, config['pad_for']['comp_type_labels'])
         relation_type_cc_loss = self.get_cross_entropy(relation_type_logits, relation_type_labels, config['pad_for']['relation_type_labels'])
