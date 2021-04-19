@@ -76,17 +76,18 @@ class TaskModel(tf.keras.models.Model):
         viterbi_sequence, potentials, sequence_length, chain_kernel = crf_predictions
         return viterbi_sequence, potentials, sequence_length, chain_kernel, logits, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)
     
-    def compute_batch_sample_weight(self, labels, pad_label=5):
-        _, _, counts = tf.unique_with_counts(tf.reshape(labels, [-1]))
-        counts = tf.pad(counts, [len(config['relations'])-tf.shape(counts)[-1]])
-        counts = tf.cast(counts, dtype=tf.float32) + tf.keras.backend.epsilon()
+    def compute_batch_sample_weight(self, labels, pad_label=5, max_possible_length=6):
+        zero_counts = tf.zeros(max_possible_length)
+        y, idx, counts = tf.unique_with_counts(tf.reshape(labels, [-1]))
+        zero_counts[idx] = counts
+        counts = tf.cast(zero_counts, dtype=tf.float32) + tf.keras.backend.epsilon()
         class_weights = tf.math.log(tf.reduce_sum(counts)/counts)
         non_pad = tf.cast(tf.math.not_equal(labels, pad_label), dtype=tf.float32)
         weighted_labels = tf.gather(class_weights, labels)
         return non_pad*weighted_labels
 
-    def get_cross_entropy(self, logits, labels, pad_label):
-        sample_weight = self.compute_batch_sample_weight(labels, pad_label)
+    def get_cross_entropy(self, logits, labels, pad_label, max_possible_length):
+        sample_weight = self.compute_batch_sample_weight(labels, pad_label, max_possible_length=max_possible_length)
         cc_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits)
         n_samples = tf.reduce_sum(sample_weight)
         return tf.reduce_sum(cc_loss*sample_weight)/n_samples if n_samples!=0 else tf.convert_to_tensor(0.)
@@ -95,9 +96,9 @@ class TaskModel(tf.keras.models.Model):
         comp_type_labels, relation_type_labels, refers_labels = y
         viterbi_sequence, potentials, sequence_length, chain_kernel, logits, relation_type_logits, refers_logits = self.call(x, training=True)
         crf_loss = -crf_log_likelihood(potentials, comp_type_labels, sequence_length, chain_kernel)[0]
-        comp_type_cc_loss = self.get_cross_entropy(logits, comp_type_labels, config['pad_for']['comp_type_labels'])
-        relation_type_cc_loss = self.get_cross_entropy(relation_type_logits, relation_type_labels, config['pad_for']['relation_type_labels'])
-        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, config['pad_for']['refers_labels']), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=tf.TensorSpec(shape=[], dtype=tf.float32))
+        comp_type_cc_loss = self.get_cross_entropy(logits, comp_type_labels, config['pad_for']['comp_type_labels'], len(config['arg_components'])+1)
+        relation_type_cc_loss = self.get_cross_entropy(relation_type_logits, relation_type_labels, config['pad_for']['relation_type_labels'], len(config['relations']))
+        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, config['pad_for']['refers_labels'], len(config['dist_to_label'])+2), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=tf.TensorSpec(shape=[], dtype=tf.float32))
         refers_cc_loss = tf.reduce_sum(refers_cc_losses)
         return tf.reduce_mean(crf_loss), comp_type_cc_loss, relation_type_cc_loss, refers_cc_loss
     
