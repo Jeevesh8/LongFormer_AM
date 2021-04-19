@@ -1,6 +1,6 @@
 import tensorflow as tf
 from functools import wraps
-from transformers import LongformerTokenizer
+from transformers import LongformerTokenizer, TFLongformerForMaskedLM, LongformerForMaskedLM
 
 def convert_outputs_to_tensors(dtype):
     def inner(func):
