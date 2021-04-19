@@ -78,6 +78,7 @@ class TaskModel(tf.keras.models.Model):
     
     def compute_batch_sample_weight(self, labels, pad_label=5):
         _, _, counts = tf.unique_with_counts(tf.reshape(labels, [-1]))
+        counts = tf.pad(counts, [len(config['relations'])-tf.shape(counts)[-1]])
         counts = tf.cast(counts, dtype=tf.float32) + tf.keras.backend.epsilon()
         class_weights = tf.math.log(tf.reduce_sum(counts)/counts)
         non_pad = tf.cast(tf.math.not_equal(labels, pad_label), dtype=tf.float32)
