@@ -88,7 +88,7 @@ class TaskModel(tf.keras.models.Model):
         sample_weight = self.compute_batch_sample_weight(labels, pad_label)
         cc_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits)
         n_samples = tf.reduce_sum(sample_weight)
-        return tf.reduce_sum(cc_loss*sample_weight)/n_samples if n_samples!=0 else tf.convert_to_tensor([0.])
+        return tf.reduce_sum(cc_loss*sample_weight)/n_samples if n_samples!=0 else tf.convert_to_tensor(0.)
     
     def compute_loss(self, x, y):
         comp_type_labels, relation_type_labels, refers_labels = y
@@ -96,7 +96,7 @@ class TaskModel(tf.keras.models.Model):
         crf_loss = -crf_log_likelihood(potentials, comp_type_labels, sequence_length, chain_kernel)[0]
         comp_type_cc_loss = self.get_cross_entropy(logits, comp_type_labels, config['pad_for']['comp_type_labels'])
         relation_type_cc_loss = self.get_cross_entropy(relation_type_logits, relation_type_labels, config['pad_for']['relation_type_labels'])
-        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, config['pad_for']['refers_labels']), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=tf.TensorSpec(shape=[None], dtype=tf.float32))
+        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, config['pad_for']['refers_labels']), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=tf.TensorSpec(shape=[], dtype=tf.float32))
         refers_cc_loss = tf.reduce_sum(refers_cc_losses)
         return tf.reduce_mean(crf_loss), comp_type_cc_loss, relation_type_cc_loss, refers_cc_loss
     
