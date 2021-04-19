@@ -48,3 +48,25 @@ def _create_min_max_boundaries(max_length,
   buckets_min = [0] + bucket_boundaries
   buckets_max = bucket_boundaries + [max_length + 1]
   return buckets_min, buckets_max
+
+def get_model(max_pos, attention_window):
+    model = LongformerForMaskedLM.from_pretrained('allenai/longformer-base-4096', attention_window=attention_window)
+    model_config = model.config
+    
+    current_max_pos, embed_size = model.longformer.embeddings.position_embeddings.weight.shape
+    model_config.max_position_embeddings = max_pos
+    new_pos_embed = model.longformer.embeddings.position_embeddings.weight.new_empty(max_pos, embed_size)
+
+    # copy position embeddings over and over to initialize the new position embeddings
+    k = 2
+    step = current_max_pos-2
+    while k<max_pos-1:
+        new_pos_embed[k:(k + step)] = model.longformer.embeddings.position_embeddings.weight[2:]
+        k += step
+
+    model.longformer.embeddings.position_embeddings.weight.data = new_pos_embed
+    model.longformer.embeddings.position_ids.data = torch.tensor([i for i in range(max_pos)]).reshape(1, max_pos)
+    model.save_pretrained('tmp/LF/')
+
+    model = TFLongformerForMaskedLM.from_pretrained('tmp/LF', from_pt=True, attention_window=attention_window)
+    return model
