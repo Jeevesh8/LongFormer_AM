@@ -55,6 +55,7 @@ class TaskModel(tf.keras.models.Model):
                  alpha=0.5, lr=1e-5):
         super(TaskModel, self).__init__()
         self.encoder = encoder
+        num_classes = len(config['arg_components'])+1
         self.ff = tf.keras.layers.Dense(num_classes)
         self.use_gru = use_gru
         self.alpha = alpha
