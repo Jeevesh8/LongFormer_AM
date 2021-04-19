@@ -1,4 +1,5 @@
 import tensorflow as tf
+import torch
 from functools import wraps
 from transformers import LongformerTokenizer, TFLongformerForMaskedLM, LongformerForMaskedLM
 
