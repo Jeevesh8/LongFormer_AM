@@ -96,7 +96,7 @@ class TaskModel(tf.keras.models.Model):
         crf_loss = -crf_log_likelihood(potentials, comp_type_labels, sequence_length, chain_kernel)[0]
         comp_type_cc_loss = self.get_cross_entropy(logits, comp_type_labels, config['pad_for']['comp_type_labels'])
         relation_type_cc_loss = self.get_cross_entropy(relation_type_logits, relation_type_labels, config['pad_for']['relation_type_labels'])
-        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, config['pad_for']['refers_labels']), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=None)
+        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, config['pad_for']['refers_labels']), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=tf.TensorSpec(shape=[None], dtype=tf.float32))
         refers_cc_loss = tf.reduce_sum(refers_cc_losses)
         return tf.reduce_mean(crf_loss), comp_type_cc_loss, relation_type_cc_loss, refers_cc_loss
     
