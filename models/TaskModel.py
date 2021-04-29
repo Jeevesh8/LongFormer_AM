@@ -78,7 +78,7 @@ class TaskModel(tf.keras.models.Model):
         return viterbi_sequence, potentials, sequence_length, chain_kernel, logits, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)
     
     def compute_batch_sample_weight(self, labels, pad_label=5, max_possible_length=6):
-        counts = tf.reduce_sum(tf.equal(tf.expand_dims(tf.range(0, max_possible_length), -1), tf.reshape(labels, [-1])), axis=-1)
+        counts = tf.reduce_sum(tf.cast(tf.equal(tf.expand_dims(tf.range(0, max_possible_length), -1), tf.reshape(labels, [-1])), dtype=tf.int32), axis=-1)
         counts = tf.cast(counts, dtype=tf.float32) + tf.keras.backend.epsilon()
         class_weights = tf.math.log(tf.reduce_sum(counts)/counts)
         non_pad = tf.cast(tf.math.not_equal(labels, pad_label), dtype=tf.float32)
