@@ -65,15 +65,16 @@ class TaskModel(tf.keras.models.Model):
         self.relation_type_predictor = tf.keras.layers.Dense(len(config['relations']))
         self.refers_predictor = tf.keras.layers.Dense(len(config['dist_to_label'])+2)
         
-    def call(self, inputs, features=None, training=True):
+    def call(self, inputs, training=True):
         encoded_seq = self.encoder(inputs, training=training)['last_hidden_state']
         logits = self.gru(encoded_seq) if self.use_gru else self.ff(encoded_seq)
         crf_predictions = self.crf_layer(logits, mask=inputs['attention_mask'], training=training)
-
-        if not training:
-            return crf_predictions
         
         viterbi_sequence, potentials, sequence_length, chain_kernel = crf_predictions
+        
+        if not training:
+            return viterbi_sequence, sequence_length, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)
+        
         return viterbi_sequence, potentials, sequence_length, chain_kernel, logits, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)
     
     def compute_batch_sample_weight(self, labels, pad_label=5, max_possible_length=6):
@@ -101,4 +102,7 @@ class TaskModel(tf.keras.models.Model):
         return tf.reduce_mean(crf_loss), comp_type_cc_loss, relation_type_cc_loss, refers_cc_loss
     
     def infer_step(self, x):
-        return self(x1, features=x2, training=False)
+        viterbi_seqs, seq_lens, relation_type_logits, refers_logits = self(x, training=False)
+        relation_type_preds = tf.argmax(relation_type_logits, axis=-1)
+        refers_preds = tf.argmax(refers_logits, axis=-1)
+        return viterbi_seqs, seq_lens, relation_type_preds, refers_preds
