@@ -138,4 +138,4 @@ def get_model_inputs(file_lis):
     for filename in file_lis:
         if not(os.path.isfile(filename) and filename.endswith('.xml')):
             continue
-        yield get_thread_with_labels(filename)
+        yield (tf.constant(filename), *get_thread_with_labels(filename))
