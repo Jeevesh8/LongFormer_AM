@@ -18,6 +18,7 @@ def get_transition(num_classes, max_val=0.1, min_val=-0.1, is_padded=False):
     if is_padded:
         T[5, :] = [-1e-5 for _ in range(num_classes)]
         T[[1, 3], 5] = [-10000., -10000.]
+        T[5, 5] = 0
     return T.astype('float32')
 
 def compute_dsc_loss(y_pred, y_true, alpha=0.6):
@@ -50,12 +51,12 @@ class TaskModel(tf.keras.models.Model):
     def __init__(self, encoder, 
                  max_trans=0.1, 
                  min_trans=-0.1, 
-                 is_padded=True,
+                 is_padded=False,
                  use_gru=False, 
                  alpha=0.5, lr=1e-5):
         super(TaskModel, self).__init__()
         self.encoder = encoder
-        num_classes = len(config['arg_components'])+1
+        num_classes = len(config['arg_components']) #+1
         self.ff = tf.keras.layers.Dense(num_classes)
         self.use_gru = use_gru
         self.alpha = alpha
@@ -70,12 +71,10 @@ class TaskModel(tf.keras.models.Model):
         logits = self.gru(encoded_seq) if self.use_gru else self.ff(encoded_seq)
         crf_predictions = self.crf_layer(logits, mask=inputs['attention_mask'], training=training)
         
-        viterbi_sequence, potentials, sequence_length, chain_kernel = crf_predictions
-        
         if not training:
-            return viterbi_sequence, sequence_length, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)
+            return tuple((*crf_predictions, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)))
         
-        return viterbi_sequence, potentials, sequence_length, chain_kernel, logits, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)
+        return tuple((*crf_predictions, logits, self.relation_type_predictor(encoded_seq), self.refers_predictor(encoded_seq)))
     
     def compute_batch_sample_weight(self, labels, pad_label=5, max_possible_length=6):
         counts = tf.reduce_sum(tf.cast(tf.equal(tf.expand_dims(tf.range(0, max_possible_length), -1), tf.reshape(labels, [-1])), dtype=tf.int32), axis=-1)
