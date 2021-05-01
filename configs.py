@@ -24,7 +24,7 @@ tokenizer, user_token_indices = get_tokenizer(config['max_tokenizer_length'])
 
 config['pad_for'] = {
     'tokenized_thread' : tokenizer.pad_token_id,
-    'comp_type_labels' : len(config['arg_components']),
+    'comp_type_labels' : config['arg_components']['other'], #len(config['arg_components']),
     'refers_labels' : 0, #len(config['dist_to_label'])+2,
     'relation_type_labels' : config['relations'].index('None'),
     'attention_mask' : 0,
