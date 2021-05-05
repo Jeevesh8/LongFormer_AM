@@ -10,7 +10,7 @@ def get_arg_comp_lis(comp_type, length):
     """Returns a list of labels for a component of comp_type of specified length.
     """
     assert comp_type in ['claim', 'premise'], "Un-supported component type: "+comp_type+" Try changing \'arg_components\' in config.py"
-    comp_type = 'C' if comp_type is 'claim' else 'P'
+    comp_type = 'C' if comp_type == 'claim' else 'P'
     begin = config['arg_components']['B-'+comp_type]
     intermediate = config['arg_components']['I-'+comp_type]
     return [begin]+[intermediate]*(length-1)
@@ -100,7 +100,7 @@ def get_thread_with_labels(filename):
     tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
 
     comp_type_labels = [config['arg_components']['other']]*len(tokenized_thread)
-    refers_labels = list(([0]*config['max_rel_comps'] for _ in range(len(tokenized_thread))))
+    refers_labels = [[0]*config['max_rel_comps'] for _ in range(len(tokenized_thread))]
     relation_type_labels = [config['relations'].index('None')]*len(tokenized_thread)
     attention_mask = [1]*len(tokenized_thread)
     global_attention = get_global_attention(tokenized_thread, user_token_indices)

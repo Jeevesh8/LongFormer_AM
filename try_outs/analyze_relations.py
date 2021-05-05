@@ -20,8 +20,8 @@ def find_last_to_last(lis, elem_set)-> int:
     """Returns the index of last to last occurance of any element of elem_set in lis,
     if element is not found at least twice, returns -1. """
     count = 0
-    for idx, elem in reversed(list(enumerate(lis))):
-        if elem in elem_set:
+    for idx, elem2 in reversed(list(enumerate(lis))):
+        if elem2 in elem_set:
             count+=1
         if count==2:
             return idx
@@ -125,8 +125,8 @@ if __name__=='__main__':
             prev_content = content
             
             content = '\n'.join([' '.join(elem.split()) for elem in content.split('\n')])
-            for elem in replaces:
-                content = content.replace(*elem)
+            for elem1 in replaces:
+                content = content.replace(*elem1)
             
             input_ids = tokenizer(content)['input_ids']
             #print("Input ids: ", len(input_ids), input_ids)
