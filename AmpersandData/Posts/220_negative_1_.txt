@@ -1,9 +1,0 @@
-
-
-&gt; There isn't a single instance where a mobile website is preferable to a full site. The information is gutted and moved around making the site difficult to browse if it's something you are familiar with and less useful because the information is presented in a mobile-friendly way. I believe smart phones are prevalent enough among phone users who want to use the Internet that it outweighs the "some people don't have smartphones" argument. Change my view.
-
-Not all smartphones are created equal. 
-While you may have an iPhone, and most of the ads you see are for buying the flagship Android or Apple product, there are plenty of cheaper smartphones with less memory and a lesser processor which may chug a little bit on these websites. 
-More importantly though, these versions of the websites are often much more barebones and designed with a phone in mind. 
-They use less data (e.g. images, animations, etc...) to make it easier to load on people with a poor 3G connection or a low data limit on their plan, and they often have much bigger buttons, text, and menus to work better for someone on a touch screen as opposed to someone on a computer.
-

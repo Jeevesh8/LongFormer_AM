@@ -1,4 +1,0 @@
-
-
-As someone from a developing country, I would like to point out that mobile sites require less amount of data transfer to view than a desktop site which is a big thing for us due to slower Internet connections.
-

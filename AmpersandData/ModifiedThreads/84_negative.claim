@@ -1,9 +1,0 @@
-title	None:None	CMV: Humans are going to die out because of an economic collapse
-0	None:None	Bill Gade presents the argument better than I do so I will just quote him.
-2a	None:None	I do realize that this is a very unhealthy idea to have whether or not that the idea is true or not, I just have not been able to beat it myself.
-3a	0:partial_attack	I do disagree with Gade a little bit.
-3b	0:rebuttal_attack	I don't think it would kill everybody,
-3	3c:support	I probably believe this because I listen to Alex Jones too much.
-4	5:undercutter_attack	Something like this will take decades or centuries and won't be applied evenly across the entire planet.
-6	4:undercutter_attack	Economic bubbles historically popped in a matter of months.
-7	5_6:undercutter_attack	I have trouble equating a financial bubble with the entire world economy.

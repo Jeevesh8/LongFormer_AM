@@ -1,8 +1,0 @@
-title	None:None	CMV: Swimming is the best form of exercise
-0	title:partial_disagreement	obviously a balanced exercise regimen is the best choice for health and well-being
-2	title:agreement	there is no reason other than lack of availability to choose anything other than swimming
-7	title:disagreement	"best form of exercise" is actually meaningless
-12	2:undercutter	you are dismissing "lack of availability" as a reason pretty easily.
-13	12:support	That is probably one of the biggest reasons.
-14	13:partial_agreement	fair enough
-15	13:partial_attack	I still feel that for those who are able swimming is the best form of exercise
