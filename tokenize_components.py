@@ -6,14 +6,19 @@ from configs import config, tokenizer, user_token_indices
 from component_generator import generate_components
 from my_utils import convert_outputs_to_tensors
 
+
 def get_arg_comp_lis(comp_type, length):
-    """Returns a list of labels for a component of comp_type of specified length.
-    """
-    assert comp_type in ['claim', 'premise'], "Un-supported component type: "+comp_type+" Try changing \'arg_components\' in config.py"
-    comp_type = 'C' if comp_type is 'claim' else 'P'
-    begin = config['arg_components']['B-'+comp_type]
-    intermediate = config['arg_components']['I-'+comp_type]
-    return [begin]+[intermediate]*(length-1)
+    """Returns a list of labels for a component of comp_type of specified length."""
+    assert comp_type in ["claim", "premise"], (
+        "Un-supported component type: "
+        + comp_type
+        + " Try changing 'arg_components' in config.py"
+    )
+    comp_type = "C" if comp_type is "claim" else "P"
+    begin = config["arg_components"]["B-" + comp_type]
+    intermediate = config["arg_components"]["I-" + comp_type]
+    return [begin] + [intermediate] * (length - 1)
+
 
 def get_ref_link_lis(related_to, first_idx, last_idx) -> List[int]:
     """To be used to getting token ids to link the component between [first_index, last_index) to the component at distance related_to.
@@ -24,41 +29,52 @@ def get_ref_link_lis(related_to, first_idx, last_idx) -> List[int]:
     Returns: a List of the token positions that each token of the component beginning at first_idx refers to.
     """
     try:
-        refs = [config['dist_to_label'][related_to]]
+        refs = [config["dist_to_label"][related_to]]
     except:
         refs = [0]
-    return refs + [config['dist_to_label'][i] for i in range(first_idx, last_idx-1)]
-        
+    return refs + [config["dist_to_label"][i] for i in range(first_idx, last_idx - 1)]
+
 
 def get_global_attention(tokenized_thread, user_token_indices):
-    global_attention = [0]*len(tokenized_thread)
+    global_attention = [0] * len(tokenized_thread)
     for i, elem in enumerate(tokenized_thread):
         if elem in user_token_indices:
             global_attention[i] = 1
     return global_attention
 
-def find_last_to_last(lis, elem_set)-> int:
+
+def find_last_to_last(lis, elem_set) -> int:
     """Returns the index of last to last occurance of any element of elem_set in lis,
-    if element is not found at least twice, returns -1. """
+    if element is not found at least twice, returns -1."""
     count = 0
     for idx, elem in reversed(list(enumerate(lis))):
         if elem in elem_set:
-            count+=1
-        if count==2:
+            count += 1
+        if count == 2:
             return idx
     return 0
 
-def get_tokenized_thread(filename)-> Tuple[List[str], Dict[str, int], Dict[str, int], Dict[str, Tuple[str, str]], Dict[str, int], Dict[str, str]]:
+
+def get_tokenized_thread(
+    filename,
+) -> Tuple[
+    List[str],
+    Dict[str, int],
+    Dict[str, int],
+    Dict[str, Tuple[str, str]],
+    Dict[str, int],
+    Dict[str, str],
+]:
     """Returns the tokenized version of thread present in filename. File must be an xml file of Ampersand data.
     Returns a tuple having:
         tokenized_thread: A 1-D integer List containing the input_ids output by tokenizer for the text in filename.
         begin_positions:  A dictionary mapping the ids of various argumentative components to their beginning index in tokenized_thread.
-        prev_comment_begin_positions: A dictionary mapping the ids of various argumentative components to the 
-                                      beginning index of "the comment before the comment they occur in" in tokenized_thread. 
+        prev_comment_begin_positions: A dictionary mapping the ids of various argumentative components to the
+                                      beginning index of "the comment before the comment they occur in" in tokenized_thread.
                                       The components in <op></op> are mapped to index 0.
         ref_n_rel_type:  A dictionary mapping the ids of various argumentative components to a tuple of the form
                         ('_' separated string of all components the component relates to, relation type)
-        
+
         end_positions: A dictionary mapping the ids of various argumentative components to their ending index+1 in tokenized_thread.
         comp_types: A dictionary mapping the ids of various argumentative components to their types ('claim'/'premise')
     """
@@ -68,27 +84,37 @@ def get_tokenized_thread(filename)-> Tuple[List[str], Dict[str, int], Dict[str, 
     ref_n_rel_type = dict()
     comp_types = dict()
 
-    tokenized_thread = [tokenizer._convert_token_to_id('<s>')]
+    tokenized_thread = [tokenizer._convert_token_to_id("<s>")]
     for component_tup in generate_components(filename):
         component, comp_type, comp_id, refers, rel_type = component_tup
         encoding = tokenizer.encode(component)[1:-1]
-        if comp_type=='claim' or comp_type=='premise':
+        if comp_type == "claim" or comp_type == "premise":
             begin_positions[comp_id] = len(tokenized_thread)
-            end_positions[comp_id] = len(tokenized_thread)+len(encoding)
-            prev_comment_begin_position[comp_id] = find_last_to_last(tokenized_thread, user_token_indices)
+            end_positions[comp_id] = len(tokenized_thread) + len(encoding)
+            prev_comment_begin_position[comp_id] = find_last_to_last(
+                tokenized_thread, user_token_indices
+            )
             ref_n_rel_type[comp_id] = (refers, rel_type)
             comp_types[comp_id] = comp_type
         tokenized_thread += encoding
-    tokenized_thread.append(tokenizer._convert_token_to_id('</s>'))
-    
-    return tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types
+    tokenized_thread.append(tokenizer._convert_token_to_id("</s>"))
+
+    return (
+        tokenized_thread,
+        begin_positions,
+        prev_comment_begin_position,
+        ref_n_rel_type,
+        end_positions,
+        comp_types,
+    )
+
 
 @convert_outputs_to_tensors(dtype=tf.int32)
 def get_thread_with_labels(filename):
     """Returns the tokenized threads along with all the proper labels.
     Args:
         filename: The xml whose data is to be tokenized.
-    
+
     Returns a tuple having:
         tokenized_thread: A 1-D integer List containing the input_ids output by tokenizer for the text in filename.
         comp_type_labels: A 1-D integer List containing labels for the type of component(other, begin-claim, inter-claim..) [size = len(tokenized_thread)]
@@ -97,45 +123,95 @@ def get_thread_with_labels(filename):
         attention_mask:       A 1-D List of 1's.  [size = [len(tokenized_thread)]]
         global_attention:     A 1-D integer List having 1 where there is user tokens, 0 elsewhere. [size = [len(tokenized_thread),]]
     """
-    tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
+    (
+        tokenized_thread,
+        begin_positions,
+        prev_comment_begin_position,
+        ref_n_rel_type,
+        end_positions,
+        comp_types,
+    ) = get_tokenized_thread(filename)
 
-    comp_type_labels = [config['arg_components']['other']]*len(tokenized_thread)
-    refers_labels = list(([0]*config['max_rel_comps'] for _ in range(len(tokenized_thread))))
-    relation_type_labels = [config['relations'].index('None')]*len(tokenized_thread)
-    attention_mask = [1]*len(tokenized_thread)
+    comp_type_labels = [config["arg_components"]["other"]] * len(tokenized_thread)
+    refers_labels = list(
+        ([0] * config["max_rel_comps"] for _ in range(len(tokenized_thread)))
+    )
+    relation_type_labels = [config["relations"].index("None")] * len(tokenized_thread)
+    attention_mask = [1] * len(tokenized_thread)
     global_attention = get_global_attention(tokenized_thread, user_token_indices)
-    
+
     prev_end = 0
     for comp_id in begin_positions:
         ref, rel = ref_n_rel_type[comp_id]
         reference_position = prev_comment_begin_position[comp_id]
         begin, end = begin_positions[comp_id], end_positions[comp_id]
 
-        assert prev_end<=begin, "Overlapping components! End of previous component: "+str(prev_end)+" .Beginning of next component: "+str(begin)
-        assert 0<=reference_position<=begin<=end<len(tokenized_thread) or 0<=reference_position<=prev_end+1<=begin<=end<len(tokenized_thread), "Begin, reference and end are not correct."+str(reference_position)+", "+str(begin)+', '+str(end)
+        assert prev_end <= begin, (
+            "Overlapping components! End of previous component: "
+            + str(prev_end)
+            + " .Beginning of next component: "
+            + str(begin)
+        )
+        assert 0 <= reference_position <= begin <= end < len(
+            tokenized_thread
+        ) or 0 <= reference_position <= prev_end + 1 <= begin <= end < len(
+            tokenized_thread
+        ), (
+            "Begin, reference and end are not correct."
+            + str(reference_position)
+            + ", "
+            + str(begin)
+            + ", "
+            + str(end)
+        )
 
-        comp_type_labels[begin:end] = get_arg_comp_lis(comp_types[comp_id], end-begin)
-        relation_type_labels[begin] = config['relations'].index(str(rel))
-        relation_type_labels[begin+1:end] = [config['relations'].index('cont')]*(end-(begin+1))
-        
-        for j, ref_id in enumerate(str(ref).split('_')):
-            rel_dist = (min(config['dist_to_label'].keys())-1 if ref_id=='None' else begin_positions[ref_id])-reference_position
-            comp_refer_labels = get_ref_link_lis(rel_dist, begin-reference_position, end-reference_position)
-            if ref_id=='title':
-                comp_refer_labels = [1]+comp_refer_labels[1:]
+        comp_type_labels[begin:end] = get_arg_comp_lis(comp_types[comp_id], end - begin)
+        relation_type_labels[begin] = config["relations"].index(str(rel))
+        relation_type_labels[begin + 1 : end] = [config["relations"].index("cont")] * (
+            end - (begin + 1)
+        )
+
+        for j, ref_id in enumerate(str(ref).split("_")):
+            rel_dist = (
+                min(config["dist_to_label"].keys()) - 1
+                if ref_id == "None"
+                else begin_positions[ref_id]
+            ) - reference_position
+            comp_refer_labels = get_ref_link_lis(
+                rel_dist, begin - reference_position, end - reference_position
+            )
+            if ref_id == "title":
+                comp_refer_labels = [1] + comp_refer_labels[1:]
             for i in range(begin, end):
-                refers_labels[i][j] = comp_refer_labels[i-begin]
+                refers_labels[i][j] = comp_refer_labels[i - begin]
         prev_end = end
 
-    assert len(tokenized_thread)==len(comp_type_labels)==len(refers_labels)==len(relation_type_labels)==len(attention_mask)==len(global_attention), "Incorrect Dataset Loading !!"    
+    assert (
+        len(tokenized_thread)
+        == len(comp_type_labels)
+        == len(refers_labels)
+        == len(relation_type_labels)
+        == len(attention_mask)
+        == len(global_attention)
+    ), "Incorrect Dataset Loading !!"
 
-    return tokenized_thread, comp_type_labels, refers_labels, relation_type_labels, attention_mask, global_attention
+    return (
+        tokenized_thread,
+        comp_type_labels,
+        refers_labels,
+        relation_type_labels,
+        attention_mask,
+        global_attention,
+    )
+
 
 def get_model_inputs(file_lis):
     if type(file_lis) is str:
-        assert os.path.isdir(file_lis), "get_model_inputs() take either a directory name or file list as input! The provided argument is incorrect."
+        assert os.path.isdir(
+            file_lis
+        ), "get_model_inputs() take either a directory name or file list as input! The provided argument is incorrect."
         file_lis = [os.path.join(file_lis, f) for f in os.listdir(file_lis)]
     for filename in file_lis:
-        if not(os.path.isfile(filename) and filename.endswith('.xml')):
+        if not (os.path.isfile(filename) and filename.endswith(".xml")):
             continue
         yield (tf.constant(filename), *get_thread_with_labels(filename))
