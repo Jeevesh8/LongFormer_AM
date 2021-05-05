@@ -42,7 +42,6 @@ test_dataset = get_datasets(test_files)
 """## Loading Model"""
 
 from my_utils import get_model
-from configs import tokenizer
 
 model = get_model(config['max_tokenizer_length'], config['attention_window'])
 model.resize_token_embeddings(len(tokenizer))
