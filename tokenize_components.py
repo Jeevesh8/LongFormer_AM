@@ -72,7 +72,7 @@ def get_tokenized_thread(filename)-> Tuple[List[str], Dict[str, int], Dict[str, 
     for component_tup in generate_components(filename):
         component, comp_type, comp_id, refers, rel_type = component_tup
         encoding = tokenizer.encode(component)[1:-1]
-        if comp_type=='claim' or comp_type=='premise':
+        if comp_type in ['claim', 'premise']:
             begin_positions[comp_id] = len(tokenized_thread)
             end_positions[comp_id] = len(tokenized_thread)+len(encoding)
             prev_comment_begin_position[comp_id] = find_last_to_last(tokenized_thread, user_token_indices)

@@ -172,7 +172,7 @@ if __name__=='__main__':
                         component_id, dist_n_rel, component = elem.split('\t')
                         ref, rel_type = dist_n_rel.split(':')
                         for ref in ref.split('_'):
-                            if ref!='None' and ref!='title':
+                            if ref not in ['None', 'title']:
                                 distances.append(begin_positions[ref]-begin_positions[component_id])
                                 dist_relative_to_prev_comment_beginning.append(begin_positions[ref]-prev_comment_begin_position[component_id])
                                 if dist_relative_to_prev_comment_beginning[-1]<0:
