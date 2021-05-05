@@ -1,4 +1,5 @@
 import glob
+import sys
 import tensorflow as tf
 
 from configs import config, tokenizer
@@ -75,7 +76,7 @@ def batch_train_step(inp):
     inputs['global_attention_mask'] = global_attention_mask
     with tf.GradientTape() as tape:
         crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss  = task_model.compute_loss(inputs, (comp_type_labels, relation_type_labels, refers_labels))
-        print(crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss)
+        tf.print("Losses: ", crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss, output_stream=sys.stdout)
         total_loss = crf_loss + cc_loss + relation_type_cc_loss + refers_cc_loss
 
     gradients = tape.gradient(total_loss, task_model.trainable_variables)

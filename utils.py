@@ -2,7 +2,7 @@ import json
 import re
 import torch
 from transformers import BertForMaskedLM, TFBertForMaskedLM, LongformerForMaskedLM, TFLongformerForMaskedLM, LongformerConfig, LongformerTokenizer
-from cleaner import clean_pipeline
+#from cleaner import clean_pipeline
 import glob
 import os
 
