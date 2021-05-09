@@ -1,5 +1,30 @@
 from tokenize_components import get_tokenized_thread
 from configs import config
+from statistics import mode
+from typing import List, Tuple, Union
+
+def link_components(predicted_components: List[Tuple[int, int, int, int, int, str]]):
+    """Converts refers labels to distances(in terms of number of components) and subsequently to the begin position of the component at that distance.
+    Args:
+        predicted_components: A list of tuples corresponding to each argumentative component detected in viterbi sequence predicted by model,
+                             having (component number of the current component in the predicted viterbi sequence(counting non-argumentative components), 
+                                    begin position in viterbi seq, 
+                                    end position in viterbi sequence, 
+                                    component type, 
+                                    most freuent refers label for current component,
+                                    relation type)
+    Returns:
+        A list of tuples of the form specified in get_label_component_list().
+    """
+    final_predicted_comps = []
+    refer_labels_to_dists = {v:k for k, v in config['dist_to_label'].items()}
+    comp_nos_to_begin = {elem[0]: elem[1] for elem in predicted_components}
+    for comp_no, begin, end, component_type, refers_to, rel_type in predicted_components:
+        refers_to = refer_labels_to_dists[refers_to]
+        refers_to = comp_no+refers_to
+        refers_to = 'None' if refers_to == 0 or refers_to not in comp_nos_to_begin.keys() else comp_nos_to_begin[refers_to]
+        final_predicted_comps.append((begin, end, component_type, refers_to, rel_type))
+    return final_predicted_comps
 
 def get_label_component_list(filename):
     """Returns a list of tuples of form
@@ -75,7 +100,7 @@ def get_begin_from_refers(relative_dist_label, prev_comment_begin_position):
     return begin_idx_of_related_component
 
 def get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, relation_type_preds):
-    """Returns a list of tuples of the form specified in the get_component_list() function above, for the viterbi_seq predicted by the model.
+    """Returns a list of tuples of the form specified in the get_label_component_list() function above, for the viterbi_seq predicted by the model.
     Args:
         seq_length: The length of the sequence predicted by the model.
         filename: The filename of the file containing the actual xml, used for getting previous comment's beginning positions and converting relative distances to absolute ones.
@@ -93,6 +118,7 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, rel
     if viterbi_seq[j]==config['arg_components']['I-P']:
         viterbi_seq[j] = config['arg_components']['B-P'] if viterbi_seq[j+1]==config['arg_components']['I-P'] else config['arg_components']['other']
     
+    comp_no = 0
     while j<seq_length:
         if viterbi_seq[j]==config['arg_components']['B-C']:
             begin = j
@@ -103,11 +129,11 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, rel
             
             component_type = config['arg_components']['B-C']
             prev_comment_begin_position = get_prev_comment_begin_position(begin, prev_comment_begin_positions)
-            refers_to = begin_positions['title'] if refers_preds[begin]==1 else get_begin_from_refers(refers_preds[begin], prev_comment_begin_position)
+            refers_to = mode(refers_preds[begin:end])
             rel_type = config['relations'][relation_type_preds[begin]]
             
-            predicted_components.append((begin, end, component_type, refers_to, rel_type))
-        
+            predicted_components.append((comp_no, begin, end, component_type, refers_to, rel_type))
+            
         elif viterbi_seq[j]==config['arg_components']['B-P']:
             begin = j
             j+=1
@@ -117,16 +143,18 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, rel
             
             component_type = config['arg_components']['B-P']
             prev_comment_begin_position = get_prev_comment_begin_position(begin, prev_comment_begin_positions)
-            refers_to = begin_positions['title'] if refers_preds[begin]==1 else get_begin_from_refers(refers_preds[begin], prev_comment_begin_position)
+            refers_to = mode(refers_preds[begin:end])
             rel_type = config['relations'][relation_type_preds[begin]]
             
-            predicted_components.append((begin, end, component_type, refers_to, rel_type))
+            predicted_components.append((comp_no, begin, end, component_type, refers_to, rel_type))
         
         else:
             while j<seq_length and viterbi_seq[j]==config['arg_components']['other']:
                 j+=1
-    
-    return predicted_components
+        
+        comp_no+=1
+
+    return link_components(predicted_components)
 
 def change_input_dtypes(func):
     def new_func(filename, seq_length, viterbi_seq, refers_preds, relation_type_preds):

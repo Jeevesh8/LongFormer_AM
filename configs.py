@@ -1,11 +1,11 @@
 from my_utils import get_tokenizer
 
-MAX_TOKEN_DIST = 4000
-MIN_TOKEN_DIST = 0
+MAX_COMP_DIST = 5
+MIN_COMP_DIST = -10
 
 config = {
-    'max_rel_length' : 2+MAX_TOKEN_DIST-MIN_TOKEN_DIST, # 0 for no token to refer. 1 for title. Rest for various distances.
-    'dist_to_label'  : { i:j+2 for j, i in enumerate(range(MIN_TOKEN_DIST, MAX_TOKEN_DIST)) },
+    'max_rel_length' : 1+MAX_TOKEN_DIST-MIN_TOKEN_DIST, # 0 for no token to refer.
+    'dist_to_label'  : { i:j+1 for j, i in enumerate(range(MIN_TOKEN_DIST, MAX_TOKEN_DIST)) },
     'relations' : ['partial_attack', 'agreement', 
                    'attack', 'rebuttal_attack', 
                    'understand', 'undercutter', 

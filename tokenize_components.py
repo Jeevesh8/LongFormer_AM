@@ -6,6 +6,33 @@ from configs import config, tokenizer, user_token_indices
 from component_generator import generate_components
 from my_utils import convert_outputs_to_tensors
 
+def components_between(comp1_beg: int, comp2_beg: int, comp_type_labels: List[int])-> int:
+    """Returns the number of components you have to go through in the component type labels 
+    (of a tokenized thread), for going from comp1_beg(beginning of component 1) to 
+    comp2_beg(beginning of component 2). A negative number is returned if comp2_beg<comp1_beg."""
+    first_comp_beg = min(comp1_beg, comp2_beg)
+    second_comp_beg = max(comp1_beg, comp2_beg)
+    n_comps, i = 0, first_comp_beg
+    
+    while i<second_comp_beg:
+        if comp_type_labels[i]==config['arg_components']['other']:
+            while comp_type_labels[i]==config['arg_components']['other']:
+                i+=1
+            n_comps += 1
+        elif comp_type_labels[i]==config['arg_components']['B-C']:
+            i+=1
+            while comp_type_labels[i]==config['arg_components']['I-C']:
+                i+=1
+            n_comps+=1
+        elif comp_type_labels[i]==config['arg_components']['B-P']:
+            i+=1
+            while comp_type_labels[i]==config['arg_components']['I-P']:
+                i+=1
+            n_comps+=1
+        else:
+            raise ValueError("Wrong label ", comp_type_labels[i], " for beginning of a component in ", comp_type_labels, " detected at index: ", i)
+    
+    return -n_comps if comp2_beg<comp1_beg else n_comps
 
 def get_arg_comp_lis(comp_type, length):
     """Returns a list of labels for a component of comp_type of specified length."""
@@ -170,21 +197,28 @@ def get_thread_with_labels(filename):
         relation_type_labels[begin + 1 : end] = [config["relations"].index("cont")] * (
             end - (begin + 1)
         )
+        prev_end = end
+
+    for comp_id in begin_positions:
+        ref, rel = ref_n_rel_type[comp_id]
+        begin, end = begin_positions[comp_id], end_positions[comp_id]
 
         for j, ref_id in enumerate(str(ref).split("_")):
             rel_dist = (
-                min(config["dist_to_label"].keys()) - 1
+                0
                 if ref_id == "None"
-                else begin_positions[ref_id]
-            ) - reference_position
-            comp_refer_labels = get_ref_link_lis(
-                rel_dist, begin - reference_position, end - reference_position
+                else components_between(begin_positions[comp_id], begin_positions[ref_id], comp_type_labels)
             )
-            if ref_id == "title":
-                comp_refer_labels = [1] + comp_refer_labels[1:]
+            
+            try:
+                comp_refer_labels = [config['dist_to_label'][rel_dist]]*(end-begin)
+            except KeyError:
+                print("Skipping connection with out of range component level distance : ", rel_dist, " Try changing the range in configs.py, if you want to include this connection.")
+                comp_refer_labels = [config['dist_to_label'][0]]*(end-begin)
+            
             for i in range(begin, end):
                 refers_labels[i][j] = comp_refer_labels[i - begin]
-        prev_end = end
+        
 
     assert (
         len(tokenized_thread)
