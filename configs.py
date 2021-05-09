@@ -4,8 +4,8 @@ MAX_COMP_DIST = 5
 MIN_COMP_DIST = -10
 
 config = {
-    'max_rel_length' : 1+MAX_TOKEN_DIST-MIN_TOKEN_DIST, # 0 for no token to refer.
-    'dist_to_label'  : { i:j+1 for j, i in enumerate(range(MIN_TOKEN_DIST, MAX_TOKEN_DIST)) },
+    'max_rel_length' : MAX_COMP_DIST-MIN_COMP_DIST, # 0 for no token to refer.
+    'dist_to_label'  : { i:j for j, i in enumerate(range(MIN_COMP_DIST, MAX_COMP_DIST)) },
     'relations' : ['partial_attack', 'agreement', 
                    'attack', 'rebuttal_attack', 
                    'understand', 'undercutter', 

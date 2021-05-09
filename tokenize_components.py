@@ -194,7 +194,7 @@ def get_thread_with_labels(filename):
 
         comp_type_labels[begin:end] = get_arg_comp_lis(comp_types[comp_id], end - begin)
         relation_type_labels[begin] = config["relations"].index(str(rel))
-        relation_type_labels[begin + 1 : end] = [config["relations"].index("cont")] * (
+        relation_type_labels[begin + 1 : end] = [config["relations"].index(str(rel))] * (
             end - (begin + 1)
         )
         prev_end = end

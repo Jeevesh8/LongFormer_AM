@@ -64,7 +64,7 @@ class TaskModel(tf.keras.models.Model):
             self.gru = tf.keras.layers.GRU(num_classes, return_sequences=True)
         self.crf_layer = CRF(get_transition(num_classes, max_val=max_trans, min_val=min_trans, is_padded=is_padded))
         self.relation_type_predictor = tf.keras.layers.Dense(len(config['relations']))
-        self.refers_predictor = tf.keras.layers.Dense(len(config['dist_to_label'])+2)
+        self.refers_predictor = tf.keras.layers.Dense(config['max_rel_length'])
         
     def call(self, inputs, training=True):
         encoded_seq = self.encoder(inputs, training=training)['last_hidden_state']
@@ -95,8 +95,9 @@ class TaskModel(tf.keras.models.Model):
         viterbi_sequence, potentials, sequence_length, chain_kernel, logits, relation_type_logits, refers_logits = self.call(x, training=True)
         crf_loss = -crf_log_likelihood(potentials, comp_type_labels, sequence_length, chain_kernel)[0]
         comp_type_cc_loss = self.get_cross_entropy(logits, comp_type_labels, x['attention_mask'], len(config['arg_components']))
-        relation_type_cc_loss = self.get_cross_entropy(relation_type_logits, relation_type_labels, x['attention_mask'], len(config['relations']))
-        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, x['attention_mask'], len(config['dist_to_label'])+2), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=tf.TensorSpec(shape=[], dtype=tf.float32))
+        arg_comp_mask = tf.where(comp_type_labels!=config['arg_components']['other'], 1, 0)
+        relation_type_cc_loss = self.get_cross_entropy(relation_type_logits, relation_type_labels, x['attention_mask']*arg_comp_mask, len(config['relations']))
+        refers_cc_losses = tf.map_fn(lambda labels: self.get_cross_entropy(refers_logits, labels, x['attention_mask']*arg_comp_mask, config['max_rel_length']), tf.transpose(refers_labels, perm=(2,0,1)), fn_output_signature=tf.TensorSpec(shape=[], dtype=tf.float32))
         refers_cc_loss = tf.reduce_sum(refers_cc_losses)
         return tf.reduce_mean(crf_loss), comp_type_cc_loss, relation_type_cc_loss, refers_cc_loss
     

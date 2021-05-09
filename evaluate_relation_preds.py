@@ -1,6 +1,6 @@
 from tokenize_components import get_tokenized_thread
 from configs import config
-from statistics import mode
+from collections import Counter
 from typing import List, Tuple, Union
 
 def link_components(predicted_components: List[Tuple[int, int, int, int, int, str]]):
@@ -21,8 +21,8 @@ def link_components(predicted_components: List[Tuple[int, int, int, int, int, st
     comp_nos_to_begin = {elem[0]: elem[1] for elem in predicted_components}
     for comp_no, begin, end, component_type, refers_to, rel_type in predicted_components:
         refers_to = refer_labels_to_dists[refers_to]
-        refers_to = comp_no+refers_to
-        refers_to = 'None' if refers_to == 0 or refers_to not in comp_nos_to_begin.keys() else comp_nos_to_begin[refers_to]
+        refers_to = 'None' if refers_to==0 else comp_no+refers_to
+        refers_to = 'None' if refers_to == 'None' or refers_to not in comp_nos_to_begin.keys() else comp_nos_to_begin[refers_to]
         final_predicted_comps.append((begin, end, component_type, refers_to, rel_type))
     return final_predicted_comps
 
@@ -129,8 +129,8 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, rel
             
             component_type = config['arg_components']['B-C']
             prev_comment_begin_position = get_prev_comment_begin_position(begin, prev_comment_begin_positions)
-            refers_to = mode(refers_preds[begin:end])
-            rel_type = config['relations'][relation_type_preds[begin]]
+            refers_to = Counter(refers_preds[begin:end]).most_common(1)[0][0]
+            rel_type = config['relations'][Counter(relation_type_preds[begin:end]).most_common(1)[0][0]]
             
             predicted_components.append((comp_no, begin, end, component_type, refers_to, rel_type))
             
@@ -143,8 +143,8 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, rel
             
             component_type = config['arg_components']['B-P']
             prev_comment_begin_position = get_prev_comment_begin_position(begin, prev_comment_begin_positions)
-            refers_to = mode(refers_preds[begin:end])
-            rel_type = config['relations'][relation_type_preds[begin]]
+            refers_to = Counter(refers_preds[begin:end]).most_common(1)[0][0]
+            rel_type = config['relations'][Counter(relation_type_preds[begin:end]).most_common(1)[0][0]]
             
             predicted_components.append((comp_no, begin, end, component_type, refers_to, rel_type))
         
