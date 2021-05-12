@@ -189,7 +189,7 @@ def get_thread_with_labels(filename):
                 rel_dist, begin - reference_position, end - reference_position
             )
             if ref_id == "title":
-                comp_refer_labels = [1] + comp_refer_labels[1:]
+                comp_refer_labels = [0] + comp_refer_labels[1:]
             for i in range(begin, end):
                 refers_labels[i][j] = comp_refer_labels[i - begin]
         prev_end = end

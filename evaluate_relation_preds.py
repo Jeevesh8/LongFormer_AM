@@ -31,12 +31,11 @@ def get_prev_comment_begin_positions(filename):
     xml of "filename".
     """
     tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
-    return begin_positions
-    """new_prev_comment_begin_positions = {}
+    new_prev_comment_begin_positions = {}
     for k, v in begin_positions.items():
-        new_prev_comment_begin_positions[v] = prev_comment_begin_position[k]
+        new_prev_comment_begin_positions[v] = begin_positions[k]
     return new_prev_comment_begin_positions, begin_positions
-    """
+    
 
 def get_prev_comment_begin_position(begin, prev_comment_begin_positions):
     """
