@@ -32,7 +32,15 @@ def get_ref_link_lis(related_to, first_idx, last_idx) -> List[int]:
         refs = [config["dist_to_label"][related_to]]
     except:
         refs = [0]
-    return refs + [config["dist_to_label"][i] for i in range(first_idx, last_idx - 1)]
+    
+    after_first_lis  = []
+    for i in range(first_idx, last_idx - 1):
+        try:
+            after_first_lis.append(config["dist_to_label"][i])
+        except:
+            after_first_lis.append(0)
+    
+    return refs + after_first_lis
 
 
 def get_global_attention(tokenized_thread, user_token_indices):
@@ -50,7 +58,7 @@ def find_last_to_last(lis, elem_set) -> int:
     for idx, elem in reversed(list(enumerate(lis))):
         if elem in elem_set:
             count += 1
-        if count == 2:
+        if count == 1:
             return idx
     return 0
 
