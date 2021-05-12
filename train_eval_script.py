@@ -33,7 +33,7 @@ def get_datasets(file_list):
 with open('./train_test_split.txt') as f:
     lines = f.read()
     train_files = [elem.split('/')[-1][:-4].split('_') for elem in list(filter(None, lines.split('\n')[0].split('\t')))]
-    test_files = [elem.split('/')[-1][:-4].split('_') for elem in list(filter(None, lines.split('\n')[1].split('\t')))[10:]]
+    test_files = [elem.split('/')[-1][:-4].split('_') for elem in list(filter(None, lines.split('\n')[1].split('\t')))]
     train_files = ['./AmpersandData/change-my-view-modes/v2.0/'+elem[1]+'/'+elem[0]+'.xml' for elem in train_files]
     test_files = ['./AmpersandData/change-my-view-modes/v2.0/'+elem[1]+'/'+elem[0]+'.xml' for elem in test_files]
 train_dataset = get_datasets(train_files)

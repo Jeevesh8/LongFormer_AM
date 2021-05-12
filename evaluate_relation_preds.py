@@ -70,7 +70,7 @@ def get_begin_from_refers(relative_dist_label, prev_comment_begin_position):
     label_to_dist = {v:k for k,v in config['dist_to_label'].items()}
     relative_dist = label_to_dist[relative_dist_label]
     begin_idx_of_related_component =  prev_comment_begin_position+relative_dist
-    if begin_idx_of_related_component>0:
+    if begin_idx_of_related_component<0:
         print("The begin index of related component is coming out to be negative in the predictions!! Previous comment begin position: ", prev_comment_begin_position, " & The relative distance predicted: ", relative_dist)
     return begin_idx_of_related_component
 
