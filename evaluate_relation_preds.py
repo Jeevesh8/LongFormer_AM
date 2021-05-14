@@ -190,7 +190,7 @@ def single_sample_eval(filename, seq_length,
         all_links+=1
         related_to_correct_component = False
         for comp in correct_pred_components:
-            if elem[3]==comp[0]:
+            if elem[3]==comp[0] or elem[3]=='None' or elem[3]=='title':
                 related_to_correct_component = True
                 break
         
