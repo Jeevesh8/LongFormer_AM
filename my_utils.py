@@ -12,6 +12,22 @@ def convert_outputs_to_tensors(dtype):
         return tf_func
     return inner
 
+def convert_tensor_to_lists(indices):
+    def inner(func):
+        @wraps(func)
+        def func_with_cpu_inps(*args, **kwargs):
+            for idx in indices:
+                args[idx] = args[idx].numpy().tolist()
+            return func(*args, **kwargs)
+        return func_with_cpu_inps
+    return inner
+
+def get_rel_type_idx(relation: str) -> int:
+    for i, v in enumerate(config['relations_map'].values()):
+        if relation in v:
+            return i
+    return 0                                                                #Assuming None relation is 0-th position, always.
+
 def get_tokenizer(max_pos):
     tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
     vocab_file, merges_file = tokenizer.save_vocabulary('.')
