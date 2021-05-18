@@ -141,9 +141,9 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
     return predicted_components
 
 def change_input_dtypes(func):
-    def new_func(filename, seq_length, viterbi_seq, refers_preds, relation_type_preds):
+    def new_func(filename, seq_length, viterbi_seq, optimal_trees):
         for i in range(len(filename)):
-            func(filename[i].numpy().decode('utf-8'), int(seq_length[i].numpy()), viterbi_seq[i].numpy().tolist(), refers_preds[i].numpy().tolist(), relation_type_preds[i].numpy().tolist())
+            func(filename[i].numpy().decode('utf-8'), int(seq_length[i].numpy()), viterbi_seq[i].numpy().tolist(), optimal_trees[i])
     return new_func
 
 @change_input_dtypes
