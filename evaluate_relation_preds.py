@@ -1,15 +1,14 @@
 from tokenize_components import get_tokenized_thread
 from configs import config
-from my_utils import get_rel_type_idx
 
 def get_label_component_list(filename):
     """Returns a list of tuples of form
     (
     start position: int, 
     end position: int, 
-    component type: int,                                 [config['arg_components']['B-C'] or config['arg_components']['B-P']]
-    refers to: Union[int, str],                          [the beginning indices of the components that the current components refers to; "None" if the current component refers to no other component]
-    relation type: int                                   [the type of relation.(0,1,2) for (None, support, against) respectively]
+    component type: int,                                 [config['arg_components']['B-C] or config['arg_components']['B-P']]
+    refers to: List[Union[int, str]],                    [the beginning indices of the components that the current components refers to; "None" if the current component refers to no other component]
+    relation type: str                                   [the type of relation. "None" if not related to anything.]
     )
     There is one tuple per argumentative component(claim/premise) in the xml file given by "filename".
     """
@@ -21,20 +20,21 @@ def get_label_component_list(filename):
         end = end_positions[k]
         component_type = config['arg_components']['B-C'] if comp_types[k] == 'claim' else config['arg_components']['B-P']
         refers_to = [elem if elem =='None' else begin_positions[elem] for elem in str(ref_n_rel_type[k][0]).split('_')]
-        rel_type = get_rel_type_idx(str(ref_n_rel_type[k][1]))
+        rel_type = str(ref_n_rel_type[k][1])
         real_comps.append((begin, end, component_type, refers_to, rel_type))
     
     return real_comps
 
-def get_comp_no_to_begin_positions_map(filename):
-    """Returns a dictionary mapping the component number(beginning at 1) to the begin positions the argumentative component,
-    in the tokenized thread obtained from the xml of "filename".
+def get_prev_comment_begin_positions(filename):
+    """Returns a dictionary mapping the begin positions of various argumentative components
+    to the begin positions of their previous comments, in the tokenized thread obtained from the 
+    xml of "filename".
     """
     tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
-    new_begin_positions = {}
-    for i, v in enumerate(begin_positions.values()):
-        new_begin_positions[i+1] = v
-    return new_begin_positions
+    new_prev_comment_begin_positions = {}
+    for k, v in begin_positions.items():
+        new_prev_comment_begin_positions[v] = prev_comment_begin_position[k]
+    return new_prev_comment_begin_positions, begin_positions
 
 def get_prev_comment_begin_position(begin, prev_comment_begin_positions):
     """
@@ -74,18 +74,17 @@ def get_begin_from_refers(relative_dist_label, prev_comment_begin_position):
         print("The begin index of related component is coming out to be negative in the predictions!! Previous comment begin position: ", prev_comment_begin_position, " & The relative distance predicted: ", relative_dist)
     return begin_idx_of_related_component
 
-def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
+def get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, relation_type_preds):
     """Returns a list of tuples of the form specified in the get_component_list() function above, for the viterbi_seq predicted by the model.
     Args:
         seq_length: The length of the sequence predicted by the model.
         filename: The filename of the file containing the actual xml, used for getting previous comment's beginning positions and converting relative distances to absolute ones.
         viterbi_seq: List of ints corresponding to arg components labels of each token.
-        optimal_tree:   List of all the (link_from, link_to, rel_type) tuples predicted by the tree_crf model for the thread.
+        refers_preds: List of ints corresponding to the token referred to by each token in the tokenized thread.
+        relation_type_preds: List of ints corresponding to the index of relation type in config['relations']
     """
     predicted_components = []
-    begin_positions = get_comp_no_to_begin_positions_map(filename)
-    link_from_dict = {elem[0]: elem[1:] for elem in optimal_tree}
-
+    prev_comment_begin_positions, begin_positions = get_prev_comment_begin_positions(filename)
     j=0
     
     #Correct initial components
@@ -94,11 +93,8 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
     if viterbi_seq[j]==config['arg_components']['I-P']:
         viterbi_seq[j] = config['arg_components']['B-P'] if viterbi_seq[j+1]==config['arg_components']['I-P'] else config['arg_components']['other']
     
-    comp_no = 0
     while j<seq_length:
         if viterbi_seq[j]==config['arg_components']['B-C']:
-            comp_no += 1
-            
             begin = j
             j+=1
             while j<seq_length and viterbi_seq[j]==config['arg_components']['I-C']:
@@ -106,17 +102,13 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
             end = j
             
             component_type = config['arg_components']['B-C']
-            refers_to = begin_positions[link_from_dict[comp_no][0]]
-            rel_type = link_from_dict[comp_no][1]
-            
-            if refers_to == 0:
-                refers_to = "None"
+            prev_comment_begin_position = get_prev_comment_begin_position(begin, prev_comment_begin_positions)
+            refers_to = begin_positions['title'] if refers_preds[begin]==1 else get_begin_from_refers(refers_preds[begin], prev_comment_begin_position)
+            rel_type = config['relations'][relation_type_preds[begin]]
             
             predicted_components.append((begin, end, component_type, refers_to, rel_type))
         
         elif viterbi_seq[j]==config['arg_components']['B-P']:
-            comp_no += 1
-
             begin = j
             j+=1
             while j<seq_length and viterbi_seq[j]==config['arg_components']['I-P']:
@@ -124,11 +116,9 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
             end = j
             
             component_type = config['arg_components']['B-P']
-            refers_to = begin_positions[link_from_dict[comp_no][0]]
-            rel_type = link_from_dict[comp_no][1]
-
-            if refers_to == 0:
-                refers_to = "None"
+            prev_comment_begin_position = get_prev_comment_begin_position(begin, prev_comment_begin_positions)
+            refers_to = begin_positions['title'] if refers_preds[begin]==1 else get_begin_from_refers(refers_preds[begin], prev_comment_begin_position)
+            rel_type = config['relations'][relation_type_preds[begin]]
             
             predicted_components.append((begin, end, component_type, refers_to, rel_type))
         
@@ -136,8 +126,6 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
             while j<seq_length and viterbi_seq[j]==config['arg_components']['other']:
                 j+=1
     
-    assert comp_no==len(optimal_tree), "Missing some component while evaluation. Optimal tree has : "+ str(len(optimal_tree))+ " But only "+ str(comp_no)+ " arg. components detected in the tokenized thread."
-
     return predicted_components
 
 def change_input_dtypes(func):
@@ -148,19 +136,21 @@ def change_input_dtypes(func):
 
 @change_input_dtypes
 def single_sample_eval(filename, seq_length, 
-                       viterbi_seq, optimal_tree):
+                       viterbi_seq, refers_preds, 
+                       relation_type_preds,):
     """Prints out the evaluation results for a single sample thread.
     Args:
-        filename:       The xml file having the thread to be evaluated. (str)
-        seq_length:     The length of the sequence predicted with the crf. (int)
-        viterbi_seq:    The viterbi decoded sequence output by the crf. (tensor of ints with shape [None])
-        optimal_tree:   List of all the (link_from, link_to, rel_type) tuples predicted by the tree_crf model for the thread.
+        filename: The xml file having the thread to be evaluated. (str)
+        seq_length: The length of the sequence predicted with the crf. (int)
+        viterbi_seq: The viterbi decoded sequence output by the crf. (tensor of ints with shape [None])
+        refers_preds: The labels predicted for refering to other components by the model. (tensor of ints with shape [None])
+        relation_type_preds: The labels predicted for the type of relations between components by the model. (tensor of ints with shape [None])
     Returns:
         None
     """
-    print("Args: " , filename, seq_length, viterbi_seq, optimal_tree)
+    print("Args: " , filename, seq_length, viterbi_seq, refers_preds, relation_type_preds)
     label_list = get_label_component_list(filename)
-    preds_list = get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree)
+    preds_list = get_pred_component_list(seq_length, filename, viterbi_seq, refers_preds, relation_type_preds)
     print("Labels list: ", label_list)
     print("Predictions list: ", preds_list)
     

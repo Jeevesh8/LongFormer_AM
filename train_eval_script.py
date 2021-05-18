@@ -21,11 +21,12 @@ def get_datasets(file_list):
                                            output_signature=(tf.TensorSpec(shape=(), dtype=tf.string, name='filename'),
                                                              tf.TensorSpec(shape=(None), dtype=tf.int32, name='tokenized_thread'),
                                                              tf.TensorSpec(shape=(None), dtype=tf.int32, name='comp_type_labels'),
-                                                             tf.TensorSpec(shape=(None, 3), dtype=tf.int32, name='refers_to_and_type'),
+                                                             tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='refers_labels'),
+                                                             tf.TensorSpec(shape=(None), dtype=tf.int32, name='relation_type_labels'),
                                                              tf.TensorSpec(shape=(None), dtype=tf.int32, name='attention_mask'),
                                                              tf.TensorSpec(shape=(None), dtype=tf.int32, name='global_attention_mask'))
                                           ).padded_batch(config['batch_size'],
-                                                         padded_shapes=([],[None],[None],[None, None],[None],[None]),
+                                                         padded_shapes=([],[None],[None],[None, None],[None],[None],[None]),
                                                          padding_values=(None, *tuple(config['pad_for'].values())),
                                                          ).cache()
 
@@ -62,17 +63,18 @@ task_ckpt_manager = tf.train.CheckpointManager(task_ckpt, '../SavedModels/LF_Wit
 
 @tf.function(input_signature=[(tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='tokenized_thread'),
                                tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='comp_type_labels'),
-                               tf.TensorSpec(shape=(None, 3), dtype=tf.int32, name='refers_to_and_type'),
+                               tf.TensorSpec(shape=(None, None, None), dtype=tf.int32, name='refers_labels'),
+                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='relation_type_labels'),
                                tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='attention_mask'),
                                tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='global_attention_mask'))])
 def batch_train_step(inp):
-    tokenized_thread, comp_type_labels, refers_to_and_type, attention_mask, global_attention_mask = inp
+    tokenized_thread, comp_type_labels, refers_labels, relation_type_labels, attention_mask, global_attention_mask = inp
     inputs = {}
     inputs['input_ids'] = tokenized_thread
     inputs['attention_mask'] = attention_mask
     inputs['global_attention_mask'] = global_attention_mask
     with tf.GradientTape() as tape:
-        crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss  = task_model.compute_loss(inputs, (comp_type_labels, refers_to_and_type))
+        crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss  = task_model.compute_loss(inputs, (comp_type_labels, relation_type_labels, refers_labels))
         tf.print("Losses: ", crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss, output_stream=sys.stdout)
         total_loss = crf_loss + cc_loss + relation_type_cc_loss + refers_cc_loss
 
@@ -89,17 +91,18 @@ def batch_train_step(inp):
 
 @tf.function(input_signature=[(tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='tokenized_thread'),
                                tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='comp_type_labels'),
-                               tf.TensorSpec(shape=(None, 3), dtype=tf.int32, name='refers_to_and_type'),
+                               tf.TensorSpec(shape=(None, None, None), dtype=tf.int32, name='refers_labels'),
+                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='relation_type_labels'),
                                tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='attention_mask'),
                                tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='global_attention_mask'))])
 def batch_eval_step(inp):
-    tokenized_thread, comp_type_labels, refers_to_and_type, attention_mask, global_attention_mask = inp
+    tokenized_thread, comp_type_labels, refers_labels, relation_type_labels, attention_mask, global_attention_mask = inp
     inputs = {}
     inputs['input_ids'] = tokenized_thread
     inputs['attention_mask'] = attention_mask
     inputs['global_attention_mask'] = global_attention_mask
-    viterbi_seqs, seq_lens, optimal_trees = task_model.infer_step(inputs)
-    return viterbi_seqs, seq_lens, optimal_trees
+    viterbi_seqs, seq_lens, relation_type_preds, refers_preds = task_model.infer_step(inputs)
+    return viterbi_seqs, seq_lens, relation_type_preds, refers_preds
 
 """## Training Loop"""
 
@@ -111,8 +114,8 @@ ix = 1
 train_iter = iter(train_dataset.repeat())
 
 print("Starting Training..")
-    inp = train_iter.get_next()
 while steps<800:
+    inp = train_iter.get_next()
     batch_train_step(inp[1:])
     steps += 1
     print("Step: ", steps)
@@ -126,16 +129,14 @@ from evaluate_relation_preds import single_sample_eval
 
 L, P = [], []
 for inp in test_dataset:
-    viterbi_seqs, seq_lens, optimal_trees = batch_eval_step(inp[1:])
+    viterbi_seqs, seq_lens, relation_type_preds, refers_preds = batch_eval_step(inp[1:])
     #print(viterbi_seqs, seq_lens, relation_type_preds, refers_preds)
     #print(viterbi_seqs[0][:seq_lens[0]])
-    single_sample_eval(inp[0], seq_lens, viterbi_seqs, optimal_trees)
-    
+    single_sample_eval(inp[0], seq_lens, viterbi_seqs, refers_preds, relation_type_preds)
     for p, l, length in zip(list(viterbi_seqs.numpy()), list(inp[2].numpy()), list(seq_lens.numpy())):
         true_tag = labels_to_tags(l)
         predicted_tag = labels_to_tags(p)
         L.append(true_tag[:length])
         P.append(predicted_tag[:length])
-
 s = classification_report(L, P)
 print("Classfication Report: ", s)
