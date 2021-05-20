@@ -45,26 +45,27 @@ will be extended to size 5 and have all the extra(e) positions, filled with nega
 
 class tree_crf(tf.keras.layers.Layer):
     def __init__(self, prior=None):
+        super(tree_crf, self).__init__()
         self.prior = prior
-    
-    def flat_idx_to_tuple(self, idx: tf.Tensor, dimensions: List[int]) -> List[tf.Tensor]:
+
+    def flat_idx_to_tuple(self, idx: tf.Tensor, dimensions: List[int]) -> Tuple[tf.Tensor]:
         """Assume a tensor of size (A,B,C...) is flattened to size [-1], this function converts index idx in the tensor of shape [-1],
         to the corresponding idx in the original tensor.
         Args:
             idx:            index in the flattened tensor
             dimensions:     The sizes of various dimensions that were flattened, except the first.
         Returns:
-            A list of len(dimensions)+1 tensors where the i-th tensor consists of indices along the i-th dimension, which was flattened. 
+            A tuple of len(dimensions)+1 tensors where the i-th tensor consists of indices along the i-th dimension, which was flattened. 
         """
-        dimensions = [1]+dimensions+[1]
+        dimensions = [int(tf.reduce_max(idx).numpy())+1]+dimensions+[1]
         tuple_indices = [0]
         remaining_indices = idx
-        for i in range(len(dimensions)-1, 0):
+        for i in range(len(dimensions)-1, 0, -1):
             remaining_indices = (remaining_indices-tuple_indices[-1])/dimensions[i]
-            remaining_indices = tf.cast(remaining_indices, dtype=tf.uint32)
+            remaining_indices = tf.cast(remaining_indices, dtype=tf.int32)
             tuple_indices.append( tf.math.floormod( remaining_indices, dimensions[i-1]) )
         tuple_indices.reverse()
-        return tuple_indices
+        return tuple(tuple_indices[:-1])
 
     def mst(self, log_energies: tf.Tensor)-> Tuple[tf.Tensor, List[List[Tuple[int,int,int]]]]:
         """
@@ -78,38 +79,51 @@ class tree_crf(tf.keras.layers.Layer):
         energies_shape = tf.shape(log_energies).numpy()
         batch_size, M, n_rel_types = energies_shape[0], energies_shape[1], energies_shape[3]
         partitions = [ [[i] for i in range(M)] for _ in range(batch_size) ]
-        mst_energies = tf.constant([0 for _ in range(batch_size)])
+        mst_energies = [tf.constant(0.) for _ in range(batch_size)]
         trees = [[] for _ in range(batch_size)]
+        log_energies_for_idxing = log_energies.numpy()
 
         for _ in range(M):
 
-            max_idx = tf.argmax(tf.reshape(log_energies, (batch_size, -1)), axis=-1)
+            max_idx = tf.convert_to_tensor(np.argmax(np.reshape(log_energies_for_idxing, (batch_size, -1)), axis=-1), dtype=tf.int32)
             
             referred_by, referred_to, rel_type = self.flat_idx_to_tuple(max_idx, dimensions=[M, n_rel_types])
         
             for i in range(batch_size):
                 link_from, link_to, rel_t = int(referred_by[i].numpy()), int(referred_to[i].numpy()), int(rel_type[i].numpy())
                 
-                if log_energies[i, link_from, link_to, rel_type[i]]==tf.constant(-np.inf):
+                if log_energies_for_idxing[i, link_from, link_to, rel_t]==-np.inf:
                     continue
                 
                 mst_energies[i] += log_energies[i, link_from, link_to, rel_t]
                 
-                trees[i].append((link_from, link_to, rel_t))
+                for elem in partitions[i][link_from]:
+                    log_energies_for_idxing[i, elem, partitions[i][link_to], :] = -np.inf
+                
+                for elem in partitions[i][link_to]:
+                    log_energies_for_idxing[i, elem, partitions[i][link_from], :] = -np.inf
+                
+                #For ensuring every element can connect to only 1 other element
+                log_energies_for_idxing[i, link_from, :, :] = -np.inf
 
-                log_energies[i, partitions[i][link_from], partitions[i][link_to], :] = tf.constant(-np.inf)
+                trees[i].append((link_from, link_to, rel_t))
                 
                 temp = partitions[i][link_from]+partitions[i][link_to]
                 partitions[i][link_from] = partitions[i][link_to] = temp
-        
-        return mst_energies, trees
+            
+            #log_energies[i, partitions[i][link_from], partitions[i][link_to], :] = tf.constant(-np.inf) for all i            
+            #log_energies = tf.reshape(log_energies, (batch_size, -1))
+            #log_energies = tf.where(tf.range(M*M*n_rel_types)==tf.reshape(max_idx, (-1, 1)), tf.constant(-np.inf), log_energies)
+            #log_energies = tf.reshape(log_energies, (batch_size, M, M, n_rel_types))
+
+        return tf.stack(mst_energies), trees
     
     @convert_tensor_to_lists(indices=(2,))
     def score_tree(self, log_energies: tf.Tensor, tree: List[List[Tuple[int,int,int]]]) -> tf.Tensor:
         """Calculates the log energies of a given batch of trees.
         Args:
             log_energies:   same, as in self.mst()
-            tree:           A list of [list of N_i tuples of form (link_from, link_to, relation_type)] for each sample i in the batch (where N_i is the number of componenets in the i-th sample of batch)
+            tree:           A list of [list of M tuples of form (link_from, link_to, relation_type)] for each sample i in the batch (where M is the max. number of componenets in any sample of the batch)
         Returns:
             A tensor of size [batch_size] having the score of each tree corresponding to each sample(thread) of a batch.
         """
@@ -122,7 +136,7 @@ class tree_crf(tf.keras.layers.Layer):
                     tree_score += log_energies[i, link_from, link_to, rel_type]
             scores.append(tree_score)
         
-        return tf.constant(scores)
+        return tf.stack(scores)
     
     @convert_tensor_to_lists(indices=(2,))
     def disc_loss(self, log_energies: tf.Tensor, label_tree: List[List[Tuple[int,int,int]]]) -> tf.Tensor:

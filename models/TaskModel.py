@@ -102,24 +102,28 @@ class TaskModel(tf.keras.models.Model):
         Returns:
             The log_energies in the format specified in the comment in tree_crf.py of shape [batch_size, M, M, different relations]
         """
-        batch_size, n_rel_types, M, _ = tf.shape(log_energies).numpy()
+        energies_shape = tf.shape(log_energies)
+        batch_size, n_rel_types, M, _ = energies_shape[0], energies_shape[1], energies_shape[2], energies_shape[3]
         
-        #No link from dummy component(0)
-        log_energies[:, :, 0, :] = tf.constant(-np.inf)
+        #No link from dummy component(0), i.e., we set log_energies[:,:,0,:] = tf.constant(-np.inf)
+        indices =  tf.reshape(tf.repeat(tf.range(M), M), (M, M))
+        log_energies = tf.where(indices==0, tf.constant(-np.inf), log_energies)
         
         #No link from component to itself
         log_energies = tf.linalg.set_diag(log_energies, diagonal=tf.fill((batch_size, n_rel_types, M), -np.inf))
         
-        #Only None type link when referring to no component(0)
-        log_energies[:, 1:, :, 0] = tf.constant(-np.inf)
+        #Only None type link when referring to no component(0), i.e., we set log_energies[:, 1:, :, 0] = tf.constant(-np.inf)
+        indices_along_last_dim = tf.range(M)
+        indices_along_second_dim = tf.reshape(tf.repeat(tf.range(n_rel_types), M*M), (n_rel_types, M, M))
+        log_energies = tf.where(tf.logical_and(indices_along_second_dim>=1, indices_along_last_dim==0), tf.constant(-np.inf), log_energies)
         
         #No link from non-existent components
         log_energies = tf.transpose(log_energies, perm=[1,3,0,2])                                                                                       #[different relations, M(link to), batch_size, M(link from)]
-        log_energies = tf.where(tf.range(M)<n_comps+1, log_energies, -np.inf)
+        log_energies = tf.where(tf.range(M)<tf.reshape(n_comps+1, (-1,1)), log_energies, -np.inf)
 
         #No link to non-existent components
         log_energies = tf.transpose(log_energies, perm=[0,3,2,1])                                                                                       #[different relations, M(link from), batch_size, M(link to)]
-        log_energies = tf.where(tf.range(M)<n_comps+1, log_energies, -np.inf)
+        log_energies = tf.where(tf.range(M)<tf.reshape(n_comps+1, (-1,1)), log_energies, -np.inf)
         
         #Making shape compatible with tree_crf implementation
         log_energies = tf.transpose(log_energies, perm=[2,1,3,0])                                                                                       #[batch_size, M(link from), M(link to), different relations]
@@ -133,21 +137,23 @@ class TaskModel(tf.keras.models.Model):
             encoded_seq:        The longformer encodings of all the tokens in all the threads in the batch [batch_size, seq_len, embedding_size]
         Returns:
             log_energies tensor of shape [ batch_size, M, M, len(config['relations_map']) ] where the (a,b,c,d)-th entry is the log energy of having 
-            a link from component number b to component number c of type d, in sample a. For more info on the format see the comment in tree_crf.py.
+            link from component number b to component number c of type d, in sample a. For more info on the format see the comment in tree_crf.py.
         """
-        begin_comps = tf.cast(tf.logical_or(comp_type_labels==config['arg_components']['B-C'], comp_type_labels==config['arg_components']['B-P']), dtype=tf.uint32)
+        begin_comps = tf.cast(tf.logical_or(comp_type_labels==config['arg_components']['B-C'], comp_type_labels==config['arg_components']['B-P']), dtype=tf.int32)
         n_comps = tf.reduce_sum(begin_comps, axis=-1)
-        
-        batch_size, max_seq_len = tf.shape(comp_type_labels).numpy()
+        n_rel_types, d = len(config['relations_map']), config['longformer_dim']
+
+        batch_size, max_seq_len = tf.shape(comp_type_labels)[0], tf.shape(comp_type_labels)[1] #.numpy()
         M = tf.reduce_max(n_comps)+1
 
         from_embds = tf.ragged.boolean_mask(encoded_seq, tf.cast(begin_comps, dtype=tf.bool)).to_tensor(default_value=0.)                               #[batch_size, M-1, config['longoformer_dim']]
         from_embds = tf.pad(from_embds, paddings=[[0,0],[1,0],[0,0]], constant_values=1.)                                                               #[batch_size, M, config['longoformer_dim']]
         
-        to_embds = tf.reshape( self.linear_tree_crf(from_embds), (batch_size, max_seq_len, len(config['relations_map']), config['longformer_dim']))
+        to_embds = tf.reshape( self.linear_tree_crf(from_embds), (batch_size, M, n_rel_types, d))
         to_embds = tf.transpose(to_embds, perm=[0,2,1,3])                                                                                               #[batch_size, different relations, M, config['longformer_dim']]
         
-        log_energies = tf.matmul(from_embds, to_embds, transpose_b=True)
+        log_energies = tf.matmul(tf.reshape(tf.repeat(from_embds, n_rel_types, axis=0), (batch_size, n_rel_types, M, d)), 
+                                 to_embds, transpose_b=True)
         
         return self.format_log_energies(log_energies, n_comps)
 
@@ -156,12 +162,17 @@ class TaskModel(tf.keras.models.Model):
         viterbi_sequence, potentials, sequence_length, chain_kernel, logits, encoded_seq = self.call(x, training=True)
         crf_loss = -crf_log_likelihood(potentials, comp_type_labels, sequence_length, chain_kernel)[0]
         comp_type_cc_loss = self.get_cross_entropy(logits, comp_type_labels, x['attention_mask'], len(config['arg_components']))
-        log_energies = self.get_log_enegies(comp_type_labels, encoded_seq)
+        log_energies = self.get_log_energies(comp_type_labels, encoded_seq)
         relations_loss = self.tree_crf.disc_loss(log_energies, refers_to_and_type)
         return tf.reduce_mean(crf_loss), comp_type_cc_loss, relations_loss
     
     def infer_step(self, x):
         viterbi_seqs, seq_lens, encoded_seq = self(x, training=False)
-        log_energies = self.get_log_enegies(viterbi_seqs, encoded_seq)
+        
+        # correct the pad positions; by default, crf will predict random things at 
+        # pad positions(in case we allow crf to predict [PAD] tokens, it will need to learn to predict [PAD] tokens too)
+        viterbi_seqs = tf.where(tf.range(tf.shape(viterbi_seqs)[-1])<tf.reshape(seq_lens, (-1,1)), viterbi_seqs, config['pad_for']['comp_type_labels'])
+        
+        log_energies = self.get_log_energies(viterbi_seqs, encoded_seq)
         _, optimal_trees = self.tree_crf.mst(log_energies)
         return viterbi_seqs, seq_lens, optimal_trees

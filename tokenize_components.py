@@ -4,7 +4,8 @@ from typing import List, Dict, Tuple
 
 from configs import config, tokenizer, user_token_indices
 from component_generator import generate_components
-from my_utils import convert_outputs_to_tensors, get_rel_type_idx
+from my_utils import convert_outputs_to_tensors
+from simp_utils import get_rel_type_idx
 
 def get_arg_comp_lis(comp_type, length):
     """Returns a list of labels for a component of comp_type of specified length."""
@@ -159,8 +160,14 @@ def get_thread_with_labels(filename):
         
         for j, ref_id in enumerate(str(ref).split("_")):
             if j==0:
-                if ref_id == "None":
-                    refer_to_and_type.append((begin_pos_lis.index(begin), 0, rel_type))
+                
+                # skip self-referential components
+                if ref_id==comp_id:
+                    break
+                
+                elif ref_id == "None":
+                    refer_to_and_type.append((begin_pos_lis.index(begin)+1, 0, rel_type))
+                
                 else:
                     refer_to_and_type.append((begin_pos_lis.index(begin)+1, begin_pos_lis.index(begin_positions[ref_id])+1, rel_type))
             else:

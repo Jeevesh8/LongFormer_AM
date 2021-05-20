@@ -32,7 +32,7 @@ def find_last_to_last(lis, elem_set) -> int:
 
 if __name__ == "__main__":
     # Listing all different relation types
-    root = "AmpersandData/ModifiedThreads/"
+    root = "../AmpersandData/"
     rel_types = []
     for f in os.listdir(root):
         if f.endswith("claim") or f.endswith(".premise"):
@@ -44,18 +44,29 @@ if __name__ == "__main__":
 
     print("All relation types : ", set(rel_types))
 
+    thread_ids = []
+    first_post_ids = []
+    thread_ids_to_filenames= {}
+
     far_away_ids = []
     # Calculating number of relations to posts beyond one previous post and number of nested claim/premise
     two_post_farther, closer_than_two_post = 0, 0
     nested_claim_premise = 0
     for t in ["negative", "positive"]:
-        root = "AmpersandData/change-my-view-modes/v2.0/" + t + "/"
+        root = "../AmpersandData/change-my-view-modes/v2.0/" + t + "/"
         for f in os.listdir(root):
             filename = os.path.join(root, f)
             if os.path.isfile(filename) and f.endswith(".xml"):
                 with open(filename, "r") as g:
                     xml_str = g.read()
                 parsed_xml = BeautifulSoup(xml_str, "xml")
+                
+                thread_ids.append(parsed_xml.find('thread')['ID'])
+                first_post_ids.append(parsed_xml.find_all("reply")[0]['id'])
+                
+                if thread_ids[-1] not in thread_ids_to_filenames.keys():
+                    thread_ids_to_filenames[thread_ids[-1]] = []
+                thread_ids_to_filenames[thread_ids[-1]].append(filename[1:])
 
                 prev_claim_premise = ["title"]
 
@@ -118,6 +129,15 @@ if __name__ == "__main__":
     )
     print("Nested claims / premises: ", nested_claim_premise)
 
+    print("Total threads: ", len(thread_ids))
+    print("Number of distinct threads: ", len(set(thread_ids)))
+    print("Number of distinct threads considering different first replies: ", len(set([elem for elem in zip(first_post_ids, thread_ids)])))
+    print("Files having same ids: ", thread_ids_to_filenames)
+    
+    with open('./op_wise_split.txt', 'w+') as f:
+        for v in thread_ids_to_filenames.values():
+            f.write(str(v)+'\n')
+        
     replaces = [("&", "and"), ("’", "'"), ("“", '"'), ("”", '"')]
     max_pos = 8192 + 2
     tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")

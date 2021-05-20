@@ -1,6 +1,6 @@
 from tokenize_components import get_tokenized_thread
 from configs import config
-from my_utils import get_rel_type_idx
+from simp_utils import get_rel_type_idx
 
 def get_label_component_list(filename):
     """Returns a list of tuples of form
@@ -13,28 +13,37 @@ def get_label_component_list(filename):
     )
     There is one tuple per argumentative component(claim/premise) in the xml file given by "filename".
     """
-    tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
+    tokenized_thread, begin_positions, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
     real_comps = []
     
     for k in begin_positions.keys():
         begin = begin_positions[k]
         end = end_positions[k]
         component_type = config['arg_components']['B-C'] if comp_types[k] == 'claim' else config['arg_components']['B-P']
-        refers_to = [elem if elem =='None' else begin_positions[elem] for elem in str(ref_n_rel_type[k][0]).split('_')]
+        
+        related_elements_ids = str(ref_n_rel_type[k][0]).split('_')
+        
+        #skip self-referential components
+        if k in related_elements_ids:
+            continue
+
+        refers_to = [elem if elem =='None' else begin_positions[elem] for elem in related_elements_ids]
+        
         rel_type = get_rel_type_idx(str(ref_n_rel_type[k][1]))
         real_comps.append((begin, end, component_type, refers_to, rel_type))
     
     return real_comps
 
-def get_comp_no_to_begin_positions_map(filename):
-    """Returns a dictionary mapping the component number(beginning at 1) to the begin positions the argumentative component,
-    in the tokenized thread obtained from the xml of "filename".
+def get_comp_no_to_begin_positions_map(viterbi_seq):
+    """Returns a dictionary mapping the component number(beginning at 1) to the begin positions of the argumentative component,
+    in the tokenized thread.
     """
-    tokenized_thread, begin_positions, prev_comment_begin_position, ref_n_rel_type, end_positions, comp_types = get_tokenized_thread(filename)
-    new_begin_positions = {}
-    for i, v in enumerate(begin_positions.values()):
-        new_begin_positions[i+1] = v
-    return new_begin_positions
+    begin_positions, comp_no = {}, 1
+    for idx, elem in enumerate(viterbi_seq):
+        if elem==config['arg_components']['B-C'] or elem==config['arg_components']['B-P']:
+            begin_positions[comp_no] = idx
+            comp_no += 1
+    return begin_positions
 
 def get_prev_comment_begin_position(begin, prev_comment_begin_positions):
     """
@@ -83,16 +92,16 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
         optimal_tree:   List of all the (link_from, link_to, rel_type) tuples predicted by the tree_crf model for the thread.
     """
     predicted_components = []
-    begin_positions = get_comp_no_to_begin_positions_map(filename)
+    begin_positions = get_comp_no_to_begin_positions_map(viterbi_seq)
     link_from_dict = {elem[0]: elem[1:] for elem in optimal_tree}
 
     j=0
     
     #Correct initial components
-    if viterbi_seq[j]==config['arg_components']['I-C']: 
-        viterbi_seq[j] = config['arg_components']['B-C'] if viterbi_seq[j+1]==config['arg_components']['I-C'] else config['arg_components']['other']
-    if viterbi_seq[j]==config['arg_components']['I-P']:
-        viterbi_seq[j] = config['arg_components']['B-P'] if viterbi_seq[j+1]==config['arg_components']['I-P'] else config['arg_components']['other']
+    while j<seq_length and viterbi_seq[j]!=config['arg_components']['B-C'] and viterbi_seq[j]==config['arg_components']['B-P'] and viterbi_seq[j]!=config['arg_components']['other']:
+        viterbi_seq[j] = config['arg_components']['other']
+        j+=1
+    j=0
     
     comp_no = 0
     while j<seq_length:
@@ -106,11 +115,8 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
             end = j
             
             component_type = config['arg_components']['B-C']
-            refers_to = begin_positions[link_from_dict[comp_no][0]]
+            refers_to = "None" if link_from_dict[comp_no][0]==0 else begin_positions[link_from_dict[comp_no][0]]
             rel_type = link_from_dict[comp_no][1]
-            
-            if refers_to == 0:
-                refers_to = "None"
             
             predicted_components.append((begin, end, component_type, refers_to, rel_type))
         
@@ -124,12 +130,9 @@ def get_pred_component_list(seq_length, filename, viterbi_seq, optimal_tree):
             end = j
             
             component_type = config['arg_components']['B-P']
-            refers_to = begin_positions[link_from_dict[comp_no][0]]
+            refers_to = "None" if link_from_dict[comp_no][0]==0 else begin_positions[link_from_dict[comp_no][0]]
             rel_type = link_from_dict[comp_no][1]
 
-            if refers_to == 0:
-                refers_to = "None"
-            
             predicted_components.append((begin, end, component_type, refers_to, rel_type))
         
         else:
@@ -197,18 +200,23 @@ def single_sample_eval(filename, seq_length,
     #Referred components & Relation Types
     all_links, valid_links, valid_rel_types = 0, 0, 0
     for j, elem in enumerate(correct_pred_components):
-        all_links+=1
         related_to_correct_component = False
         for comp in correct_pred_components:
             if elem[3]==comp[0] or elem[3]=='None':
                 related_to_correct_component = True
                 break
         
-        if related_to_correct_component and elem[3] in correct_label_components[j][3]:
-            valid_links+=1
-            if elem[4]==correct_label_components[j][4]:
-                valid_rel_types+=1
-    
+        if related_to_correct_component:
+            all_links+=1
+        
+            if elem[3] in correct_label_components[j][3]:
+                valid_links+=1
+                if elem[4]==correct_label_components[j][4]:
+                    valid_rel_types+=1
+                    print("\tCorrect relation with correct type: ", elem[0], elem[3], elem[4])
+                else:
+                    print("\tCorrect relation with wrong type: ", elem[0], elem[3], elem[4])
+            
     print("Total Claims: ", total_claims)
     print("Total Premises: ", total_premises)
     print("Correct Claims: ", correct_claims)

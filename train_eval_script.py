@@ -60,11 +60,11 @@ task_ckpt_manager = tf.train.CheckpointManager(task_ckpt, '../SavedModels/LF_Wit
 
 """## Train step"""
 
-@tf.function(input_signature=[(tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='tokenized_thread'),
-                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='comp_type_labels'),
-                               tf.TensorSpec(shape=(None, 3), dtype=tf.int32, name='refers_to_and_type'),
-                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='attention_mask'),
-                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='global_attention_mask'))])
+#@tf.function(input_signature=[(tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='tokenized_thread'),
+#                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='comp_type_labels'),
+#                               tf.TensorSpec(shape=(None, 3), dtype=tf.int32, name='refers_to_and_type'),
+#                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='attention_mask'),
+#                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='global_attention_mask'))])
 def batch_train_step(inp):
     tokenized_thread, comp_type_labels, refers_to_and_type, attention_mask, global_attention_mask = inp
     inputs = {}
@@ -72,9 +72,9 @@ def batch_train_step(inp):
     inputs['attention_mask'] = attention_mask
     inputs['global_attention_mask'] = global_attention_mask
     with tf.GradientTape() as tape:
-        crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss  = task_model.compute_loss(inputs, (comp_type_labels, refers_to_and_type))
-        tf.print("Losses: ", crf_loss, cc_loss, relation_type_cc_loss, refers_cc_loss, output_stream=sys.stdout)
-        total_loss = crf_loss + cc_loss + relation_type_cc_loss + refers_cc_loss
+        crf_loss, cc_loss, relations_loss  = task_model.compute_loss(inputs, (comp_type_labels, refers_to_and_type))
+        tf.print("Losses: ", crf_loss, cc_loss, relations_loss, output_stream=sys.stdout)
+        total_loss = crf_loss + cc_loss + relations_loss
 
     gradients = tape.gradient(total_loss, task_model.trainable_variables)
     task_optimizer.apply_gradients(zip(gradients, task_model.trainable_variables))
@@ -87,11 +87,11 @@ def batch_train_step(inp):
 
 """## Eval Step"""
 
-@tf.function(input_signature=[(tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='tokenized_thread'),
-                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='comp_type_labels'),
-                               tf.TensorSpec(shape=(None, 3), dtype=tf.int32, name='refers_to_and_type'),
-                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='attention_mask'),
-                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='global_attention_mask'))])
+#@tf.function(input_signature=[(tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='tokenized_thread'),
+#                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='comp_type_labels'),
+#                               tf.TensorSpec(shape=(None, 3), dtype=tf.int32, name='refers_to_and_type'),
+#                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='attention_mask'),
+#                               tf.TensorSpec(shape=(None, None), dtype=tf.int32, name='global_attention_mask'))])
 def batch_eval_step(inp):
     tokenized_thread, comp_type_labels, refers_to_and_type, attention_mask, global_attention_mask = inp
     inputs = {}
