@@ -4,24 +4,40 @@ import re
 from bs4 import BeautifulSoup
 from typing import Optional
 
+def clean_text(text):
+    replaces = [("’", "'"), ("“", '"'), ("”", '"'), ('&', 'and')]
+    for elem in replaces:
+        text = text.replace(*elem)
+
+    for elem in ['.', ',','!',';', ':', '*', '?', '/', '\'', '\"', '[', ']', '(', ')', '^']:
+        text = text.replace(elem, ' '+elem+' ')
+    
+    return text
+
 def add_tags(post, user_dict):
     if post['author'] not in user_dict:
         user_dict[post['author']] = len(user_dict)
-    
-    text = str(post) 
+
+    text = str(post)
     user_tag = '[USER'+str(user_dict[post['author']])+']'
-    
-    pattern0 = r'(\n\&gt; \*Hello[\S]*)'
+
+    pattern0 = r'(\n \&gt; \*Hello[\S]*)'
+    pattern0_1 =  r'(\n > \*Hello[\S]*)'
     pattern1 = r"(https?://)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+/)*([\w\-]+)((\?)?[\w\s]*=\s*[\w\%&]*)*(\.html|\.htm)*"
     pattern2 = r"\&gt;(.*)\n"
+    pattern2_1 = r">(.*)\n"
+
 
     text = text.replace('</claim>', '</claim> ')
     text = text.replace('<claim', ' <claim')
     text = text.replace('<premise', ' <premise')
     text = text.replace('</premise>', '</premise> ')
     text = re.sub(pattern0, '', text)                             #Replace Footnotes
+    text = re.sub(pattern0_1, '', text)                           #Replace Footnotes
     text = re.sub(pattern1, '[URL]', text)                        #Replace [URL] 
     text = re.sub(pattern2, '[STARTQ]'+r'\1'+' [ENDQ] ', text)    #Replace quoted text
+    text = re.sub(pattern2_1, '[STARTQ]'+r'\1'+' [ENDQ] ', text)  #Replace quoted text
+
     #print(str(text))
     return str(text), user_tag
 
@@ -70,7 +86,7 @@ def get_components(component: bs4.BeautifulSoup, parent_type: Optional[str]=None
             yield _
     
     else:
-        yield (str(component).strip(),
+        yield (clean_text(str(component).strip()),
                'other' if parent_type is None else parent_type,
                parent_id,
                parent_refers,

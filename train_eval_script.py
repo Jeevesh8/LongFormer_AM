@@ -1,10 +1,33 @@
+import argparse
 import glob
 import sys
 import tensorflow as tf
+from transformers import create_optimizer
+from seqeval.metrics import classification_report
 
 from configs import config, tokenizer
 from tokenize_components import get_model_inputs
 from simp_utils import labels_to_tags
+from my_utils import get_model
+from models.TaskModel import TaskModel
+from evaluate_relation_preds import single_sample_eval
+
+"""## Loading Model"""
+
+model = get_model(config['max_tokenizer_length'], config['attention_window'])
+model.resize_token_embeddings(len(tokenizer))
+
+task_model = TaskModel(model.layers[0],
+                  max_trans=0.1, min_trans=-0.1,
+                  is_padded=False)
+
+task_optimizer, _ = create_optimizer(init_lr = 0.00005,
+                             num_train_steps = 800,
+                             num_warmup_steps = 80)
+
+task_ckpt = tf.train.Checkpoint(task_model=task_model, task_optimizer=task_optimizer)
+task_ckpt_manager = tf.train.CheckpointManager(task_ckpt, '../SavedModels/LF_With_rel_preds', max_to_keep=40)
+
 
 def generator(file_list):
     for elem in get_model_inputs(file_list):
@@ -30,34 +53,24 @@ def get_datasets(file_list):
                                                          padding_values=(None, *tuple(config['pad_for'].values())),
                                                          ).cache()
 
-with open('./train_test_split.txt') as f:
-    lines = f.read()
-    train_files = [elem.split('/')[-1][:-4].split('_') for elem in list(filter(None, lines.split('\n')[0].split('\t')))]
-    test_files = [elem.split('/')[-1][:-4].split('_') for elem in list(filter(None, lines.split('\n')[1].split('\t')))]
-    train_files = ['./AmpersandData/change-my-view-modes/v2.0/'+elem[1]+'/'+elem[0]+'.xml' for elem in train_files]
-    test_files = ['./AmpersandData/change-my-view-modes/v2.0/'+elem[1]+'/'+elem[0]+'.xml' for elem in test_files]
-train_dataset = get_datasets(train_files)
-test_dataset = get_datasets(test_files)
+def get_train_test_data(train_sz, test_sz, op_wise_split):
+    with open(op_wise_split) as f:
+        lines = f.readlines()
+    
+    test_files, train_files = [], []
 
-"""## Loading Model"""
+    for threads in lines:
+        files = [elem.strip("\"\'") for elem in threads.strip('\n').strip('[]').split(', ')]
+        if len(test_files)<test_sz:
+            test_files += files
+        elif len(train_files)<train_sz:
+            train_files += files
+    
+    train_dataset = get_datasets(train_files)
+    test_dataset = get_datasets(test_files)
+    
+    return train_dataset, test_dataset
 
-from my_utils import get_model
-
-model = get_model(config['max_tokenizer_length'], config['attention_window'])
-model.resize_token_embeddings(len(tokenizer))
-
-from models.TaskModel import TaskModel
-from transformers import create_optimizer
-
-task_model = TaskModel(model.layers[0],
-                  max_trans=0.1, min_trans=-0.1,
-                  is_padded=False)
-
-task_optimizer, _ = create_optimizer(init_lr = 0.00005,
-                             num_train_steps = 800,
-                             num_warmup_steps = 80)
-task_ckpt = tf.train.Checkpoint(task_model=task_model, task_optimizer=task_optimizer)
-task_ckpt_manager = tf.train.CheckpointManager(task_ckpt, '../SavedModels/LF_With_rel_preds', max_to_keep=40)
 
 """## Train step"""
 
@@ -81,11 +94,6 @@ def batch_train_step(inp):
     gradients = tape.gradient(total_loss, task_model.trainable_variables)
     task_optimizer.apply_gradients(zip(gradients, task_model.trainable_variables))
 
-#for elem in train_dataset:
-#    print("Sample iteration of train dataset: ", elem[0], elem[1])
-#    print("Trying training..")
-#    batch_train_step(elem[1:])
-#    break
 
 """## Eval Step"""
 
@@ -105,38 +113,37 @@ def batch_eval_step(inp):
     return viterbi_seqs, seq_lens, relation_type_preds, refers_preds
 
 """## Training Loop"""
+def train(train_dataset, test_dataset):
+    steps = 0
+    train_iter = iter(train_dataset.repeat())
 
-#result_file = open('../Results/LF_with_rel_preds.txt', 'w')
-#pbar = tf.keras.utils.Progbar(target=800, 
-#                              unit_name='step')
-steps = 0
-ix = 1
-train_iter = iter(train_dataset.repeat())
+    print("Starting Training..")
+    while steps<800:
+        inp = train_iter.get_next()
+        batch_train_step(inp[1:])
+        steps += 1
+        print("Step: ", steps)
+        if steps%50==0 or steps%799==0:
+            L, P = [], []
+            for inp in test_dataset:
+                viterbi_seqs, seq_lens, relation_type_preds, refers_preds = batch_eval_step(inp[1:])
+                single_sample_eval(inp[0], seq_lens, viterbi_seqs, refers_preds, relation_type_preds)
+                for p, l, length in zip(list(viterbi_seqs.numpy()), list(inp[2].numpy()), list(seq_lens.numpy())):
+                    true_tag = labels_to_tags(l)
+                    predicted_tag = labels_to_tags(p)
+                    L.append(true_tag[:length])
+                    P.append(predicted_tag[:length])
+            s = classification_report(L, P)
+            print("Classfication Report: ", s)
 
-print("Starting Training..")
-while steps<800:
-    inp = train_iter.get_next()
-    batch_train_step(inp[1:])
-    steps += 1
-    print("Step: ", steps)
-#    pbar.add(1)
+if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train_sz", required=True, type=int, nargs='+', help="Number of threads to use for train set.")
+    parser.add_argument("--test_sz", required=True, type=int, help="Number of threds in test set.")
+    parser.add_argument("--op_wise_split", default='./try_outs/op_wise_split.txt', help="path to file having op wise split of all threads.")
+    args = parser.parse_args()
 
-"""## Evaluation Loop"""
-
-from seqeval.metrics import classification_report
-
-from evaluate_relation_preds import single_sample_eval
-
-L, P = [], []
-for inp in test_dataset:
-    viterbi_seqs, seq_lens, relation_type_preds, refers_preds = batch_eval_step(inp[1:])
-    #print(viterbi_seqs, seq_lens, relation_type_preds, refers_preds)
-    #print(viterbi_seqs[0][:seq_lens[0]])
-    single_sample_eval(inp[0], seq_lens, viterbi_seqs, refers_preds, relation_type_preds)
-    for p, l, length in zip(list(viterbi_seqs.numpy()), list(inp[2].numpy()), list(seq_lens.numpy())):
-        true_tag = labels_to_tags(l)
-        predicted_tag = labels_to_tags(p)
-        L.append(true_tag[:length])
-        P.append(predicted_tag[:length])
-s = classification_report(L, P)
-print("Classfication Report: ", s)
+    for train_sz in args.train_sz:
+        train_dataset, test_dataset = get_train_test_data(train_sz, args.test_sz, args.op_wise_split)
+        train(train_dataset, test_dataset)
+    
