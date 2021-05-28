@@ -22,7 +22,7 @@ task_model = TaskModel(model.layers[0],
                   is_padded=False)
 
 task_optimizer, _ = create_optimizer(init_lr = 0.00005,
-                             num_train_steps = 800,
+                             num_train_steps = config['n_iters'],
                              num_warmup_steps = 80)
 
 task_ckpt = tf.train.Checkpoint(task_model=task_model, task_optimizer=task_optimizer)
@@ -30,6 +30,13 @@ task_ckpt_manager = tf.train.CheckpointManager(task_ckpt, '../SavedModels/LF_Wit
 
 
 def generator(file_list):
+    file_list_with_lengths = []
+    for file in file_list:
+        with open(file) as f:
+            lines = f.read()
+        file_list_with_lengths.append((file, len(lines.split())))
+    file_list_with_lengths.sort(key=lambda x: x[1])
+    file_list = [elem[0] for elem in file_list_with_lengths]
     for elem in get_model_inputs(file_list):
         yield elem
 
@@ -51,7 +58,7 @@ def get_datasets(file_list):
                                           ).padded_batch(config['batch_size'],
                                                          padded_shapes=([],[None],[None],[None, None],[None],[None],[None]),
                                                          padding_values=(None, *tuple(config['pad_for'].values())),
-                                                         ).cache()
+                                                         ).cahce() #.repeat(1 if not repeat else int((config['n_iters']*config['batch_size'])/len(file_list))+1).cache()
 
 def get_train_test_data(train_sz, test_sz, op_wise_split):
     with open(op_wise_split) as f:
@@ -114,27 +121,28 @@ def batch_eval_step(inp):
 
 """## Training Loop"""
 def train(train_dataset, test_dataset):
-    steps = 0
-    train_iter = iter(train_dataset.repeat())
-
     print("Starting Training..")
-    while steps<800:
-        inp = train_iter.get_next()
-        batch_train_step(inp[1:])
-        steps += 1
-        print("Step: ", steps)
-        if steps%50==0 or steps%799==0:
-            L, P = [], []
-            for inp in test_dataset:
-                viterbi_seqs, seq_lens, relation_type_preds, refers_preds = batch_eval_step(inp[1:])
-                single_sample_eval(inp[0], seq_lens, viterbi_seqs, refers_preds, relation_type_preds)
-                for p, l, length in zip(list(viterbi_seqs.numpy()), list(inp[2].numpy()), list(seq_lens.numpy())):
-                    true_tag = labels_to_tags(l)
-                    predicted_tag = labels_to_tags(p)
-                    L.append(true_tag[:length])
-                    P.append(predicted_tag[:length])
-            s = classification_report(L, P)
-            print("Classfication Report: ", s)
+    steps = 0
+    while steps<config['n_iters']:
+        for  elem in train_dataset:
+            steps+=1
+            if steps>config['n_iters']:
+                break        
+            print("Step: ", steps)
+            ## >>>Add if-else statement to handle long sequences in a batch.
+            batch_train_step(elem[1:])
+            if steps%50==0 or steps%799==0:
+                L, P = [], []
+                for inp in test_dataset:
+                    viterbi_seqs, seq_lens, relation_type_preds, refers_preds = batch_eval_step(inp[1:])
+                    single_sample_eval(inp[0], seq_lens, viterbi_seqs, refers_preds, relation_type_preds)
+                    for p, l, length in zip(list(viterbi_seqs.numpy()), list(inp[2].numpy()), list(seq_lens.numpy())):
+                        true_tag = labels_to_tags(l)
+                        predicted_tag = labels_to_tags(p)
+                        L.append(true_tag[:length])
+                        P.append(predicted_tag[:length])
+                s = classification_report(L, P)
+                print("Classfication Report: ", s)
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()

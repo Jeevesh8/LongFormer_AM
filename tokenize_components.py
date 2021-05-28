@@ -195,13 +195,14 @@ def get_thread_with_labels(filename):
         == len(global_attention)
     ), "Incorrect Dataset Loading !!"
 
+    m = -1 if len(tokenized_thread)<config['max_tokenizer_length'] else config['max_tokenizer_length']
     return (
-        tokenized_thread,
-        comp_type_labels,
-        refers_labels,
-        relation_type_labels,
-        attention_mask,
-        global_attention,
+        tokenized_thread[:m],
+        comp_type_labels[:m],
+        refers_labels[:m],
+        relation_type_labels[:m],
+        attention_mask[:m],
+        global_attention[:m],
     )
 
 

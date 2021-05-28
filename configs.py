@@ -18,6 +18,7 @@ config = {
     'attention_window' : 192,
     'max_rel_comps' : 5,                                                                        #The maximum number of components a component can be related to
     'batch_size' : 5,
+    'n_iters': 800,
 }
 
 tokenizer, user_token_indices = get_tokenizer(config['max_tokenizer_length'])
